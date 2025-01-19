@@ -9,7 +9,7 @@
 </head>
 <body>
     {{template "header" .}}
-    {{embed}}
+    {{block "content" .}}{{end}}
     {{template "footer" .}}
 </body>
 </html>

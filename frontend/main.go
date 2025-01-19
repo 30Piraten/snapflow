@@ -26,12 +26,12 @@ func main() {
 	app.Static("/public", "./public")
 
 	// Setup routes
-	handlers.SetupRoutes(app)
+	handlers.Handler(app)
 
 	// Create uploads directory if it doesn't exist
 	if err := os.MkdirAll("./uploads", 0755); err != nil {
 		log.Fatal(err)
 	}
 
-	log.Fatal(app.Listen(":9090"))
+	log.Fatal(app.Listen(":1234"))
 }
