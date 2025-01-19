@@ -42,3 +42,13 @@ input[type="file"] {
 .submit-btn:hover {
     background-color: #0056b3;
 }
+
+h1 {
+    color: red;
+    text-align: center;
+}
+
+p {
+    color : red;
+    text-align: center;
+}
