@@ -5,8 +5,10 @@ import (
 	"os"
 
 	"github.com/30Piraten/snapflow/handlers"
+	"github.com/30Piraten/snapflow/routes"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/template/html/v2"
 )
 
@@ -21,6 +23,12 @@ func main() {
 	app := fiber.New(fiber.Config{
 		Views: engine,
 	})
+
+	// Enable CORS
+	app.Use(cors.New())
+
+	// Setup routes
+	routes.Upload(app)
 
 	// Setup static file serving if needed
 	app.Static("/public", "./public")

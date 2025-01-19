@@ -3,26 +3,23 @@ package handlers
 import (
 	"fmt"
 
+	"github.com/30Piraten/snapflow/routes"
+	"github.com/30Piraten/snapflow/utils"
 	"github.com/gofiber/fiber/v2"
 )
 
-// PhotoOrder represents the structure of our form data
-type PhotoOrder struct {
-	FullName  string            `form:"fullName"`
-	Location  string            `form:"location"`
-	Size      string            `form:"size"`
-	PaperType string            `form:"paperType"`
-	Photos    []*fiber.FormFile `form:"photos"`
-}
+// // PhotoOrder represents the structure of our form data
+// type PhotoOrder struct {
+// 	FullName  string            `form:"fullName"`
+// 	Location  string            `form:"location"`
+// 	Size      string            `form:"size"`
+// 	PaperType string            `form:"paperType"`
+// 	Email     string            `form:"email"`
+// 	Photos    []*fiber.FormFile `form:"photos"`
+// }
 
 // SetupRoutes configures the routes for our photo upload service
 func Handler(app *fiber.App) {
-	// // Initialize template engine
-	// engine := html.New("./views", ".html")
-
-	// app = fiber.New(fiber.Config{
-	// 	Views: engine,
-	// })
 
 	// Render the upload form
 	app.Get("/", func(c *fiber.Ctx) error {
@@ -32,12 +29,19 @@ func Handler(app *fiber.App) {
 	})
 
 	// Handle form submission
-	app.Post("/upload", func(c *fiber.Ctx) error {
+	app.Post("/submit-order", func(c *fiber.Ctx) error {
 		// Parse the multipart form
-		order := new(PhotoOrder)
+		order := new(utils.PhotoOrder)
 		if err := c.BodyParser(order); err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 				"error": "Failed to parse form",
+			})
+		}
+
+		// Validatde the form fields
+		if order.FullName == "" || len(order.Photos) == 0 {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Full name and photos are required!",
 			})
 		}
 
@@ -54,8 +58,10 @@ func Handler(app *fiber.App) {
 
 		// Process each uploaded file
 		for _, file := range files {
+
+			// TODO!
 			// Save file to disk or cloud storage
-			// logic to store photos in S3 bucket!
+			// logic to store photos in S3 bucket [original & processed]!
 			err := c.SaveFile(file, fmt.Sprintf("./uploads/%s", file.Filename))
 			if err != nil {
 				return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -65,9 +71,14 @@ func Handler(app *fiber.App) {
 		}
 
 		// Return success response
-		return c.JSON(fiber.Map{
-			"message": "Order received successfully",
-			"order":   order,
-		})
+		// return c.JSON(fiber.Map{
+		// 	"message": "Order received successfully",
+		// 	"order":   order,
+		// })
+
+		return c.Redirect("/generate-upload-url")
 	})
+
+	// Register the presigned URL route
+	routes.Upload(app)
 }
