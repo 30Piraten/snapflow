@@ -5,12 +5,20 @@ import (
 	"os"
 
 	"github.com/30Piraten/snapflow/handlers"
+	"github.com/30Piraten/snapflow/utils"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/template/html/v2"
 )
 
 func main() {
+
+	// Initialize logger
+	if err := utils.InitLogger(); err != nil {
+		log.Fatalf("Failed to initalize logger: %v", err)
+	}
+	defer utils.Logger.Sync()
+
 	// Create a new instance of the template engine
 	engine := html.New("./views", ".html")
 
@@ -25,6 +33,7 @@ func main() {
 	// Enable CORS
 	app.Use(cors.New())
 
+	// Register route
 	handlers.Handler(app)
 
 	// Setup static file serving if needed
