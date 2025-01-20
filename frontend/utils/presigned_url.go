@@ -3,23 +3,23 @@ package utils
 import (
 	"context"
 	"fmt"
+	"mime/multipart"
 	"time"
 
 	cfg "github.com/30Piraten/snapflow/config"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 )
 
-// PhotoOrder represents the structure of our form data
+// PhotoOrder represents the structure of o÷ur form data
 type PhotoOrder struct {
-	FullName  string            `form:"fullName"`
-	Location  string            `form:"location"`
-	Size      string            `form:"size"`
-	PaperType string            `form:"paperType"`
-	Email     string            `form:"email"`
-	Photos    []*fiber.FormFile `form:"photos"`
+	FullName  string                  `json:"fullName"`
+	Location  string                  `json:"location"`
+	Size      string                  `json:"size"`
+	PaperType string                  `json:"paperType"`
+	Email     string                  `json:"email"`
+	Photos    []*multipart.FileHeader `json:"photos"`
 }
 
 type PresignedURLResponse struct {
@@ -29,6 +29,10 @@ type PresignedURLResponse struct {
 }
 
 func GeneratePresignedURL(order *PhotoOrder) (*PresignedURLResponse, error) {
+	if order.FullName == "" || order.Email == "" {
+		return nil, fmt.Errorf("missing required fields for presigned URL generation")
+	}
+
 	orderID := uuid.New().String()
 	s3key := fmt.Sprintf("%s/%s/%s", order.FullName, order.Email, orderID)
 
