@@ -5,8 +5,6 @@ import (
 	"os"
 
 	"github.com/30Piraten/snapflow/handlers"
-	"github.com/30Piraten/snapflow/routes"
-
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/template/html/v2"
@@ -27,14 +25,10 @@ func main() {
 	// Enable CORS
 	app.Use(cors.New())
 
-	// Setup routes
-	routes.Upload(app)
+	handlers.Handler(app)
 
 	// Setup static file serving if needed
 	app.Static("/public", "./public")
-
-	// Setup routes
-	handlers.Handler(app)
 
 	// Create uploads directory if it doesn't exist
 	if err := os.MkdirAll("./uploads", 0755); err != nil {
