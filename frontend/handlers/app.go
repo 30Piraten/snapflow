@@ -16,10 +16,6 @@ type ResponseData struct {
 	OrderID      string            `json:"order_id"`
 }
 
-func upload(app *fiber.App) {
-	app.Post("/generate-upload-url", routes.HandleGenerateUploadURL)
-}
-
 // Handler configures the routes for our photo upload service
 func Handler(app *fiber.App) {
 
@@ -40,20 +36,6 @@ func Handler(app *fiber.App) {
 			})
 		}
 
-		// Make internal call to generate the presigned URL
-		// app.Post("/generate-upload-url", r.HandleGenerateUploadURL)
-
-		// // create new context with the form data
-		// ctx := c.Context()
-		// ctx.SetBody(c.Body())
-
-		// // call the upload URL generator
-		// if err := r.HandleGenerateUploadURL(c); err != nil {
-		// 	return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-		// 		"error": "Failed to generate upload URL",
-		// 	})
-		// }
-
 		// Use the shared presigned URL generation function
 		presignedResponse, err := utils.GeneratePresignedURL(order)
 		if err != nil {
@@ -61,13 +43,6 @@ func Handler(app *fiber.App) {
 				"error": err.Error(),
 			})
 		}
-
-		// Validatde the form fields
-		// if order.FullName == "" || len(order.Photos) == 0 {
-		// 	return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-		// 		"error": "Full name and photos are required!",
-		// 	})
-		// }
 
 		// Handle file uploads
 		form, err := c.MultipartForm()
@@ -103,5 +78,5 @@ func Handler(app *fiber.App) {
 	})
 
 	// Register the presigned URL route
-	upload(app)
+	routes.Upload(app)
 }
