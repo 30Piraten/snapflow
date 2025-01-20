@@ -6,6 +6,7 @@ import (
 	"github.com/30Piraten/snapflow/routes"
 	"github.com/30Piraten/snapflow/utils"
 	"github.com/gofiber/fiber/v2"
+	"go.uber.org/zap"
 )
 
 // ResponseData to structure response
@@ -28,13 +29,21 @@ func Handler(app *fiber.App) {
 
 	// Handle form submission
 	app.Post("/submit-order", func(c *fiber.Ctx) error {
+
+		// Log the start of the request
+		utils.Logger.Info("Processing order submission")
+
 		// Parse the multipart form
 		order := new(utils.PhotoOrder)
 		if err := c.BodyParser(order); err != nil {
+			utils.Logger.Error("Failed to parse form", zap.Error(err))
+
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 				"error": "Failed to parse form",
 			})
 		}
+
+		utils.Logger.Info("Form parsed successfully", zap.String("fullName", order.FullName))
 
 		// Use the shared presigned URL generation function
 		presignedResponse, err := utils.GeneratePresignedURL(order)
