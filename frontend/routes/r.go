@@ -5,6 +5,10 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+func Upload(app *fiber.App) {
+	app.Post("/generate-upload-url", HandleGenerateUploadURL)
+}
+
 func HandleGenerateUploadURL(c *fiber.Ctx) error {
 
 	// Parse the form data from the webpage into the defined struct
@@ -24,8 +28,4 @@ func HandleGenerateUploadURL(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(response)
-}
-
-func Upload(app *fiber.App) {
-	app.Post("/generate-upload-url", HandleGenerateUploadURL)
 }
