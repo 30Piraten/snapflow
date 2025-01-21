@@ -4,15 +4,24 @@ import (
 	"log"
 	"os"
 
-	"github.com/30Piraten/snapflow/handlers"
+	"github.com/30Piraten/snapflow/routes"
 	"github.com/30Piraten/snapflow/utils"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/template/html/v2"
+	"github.com/joho/godotenv"
 )
 
 // Main configures the route for the Photo Upload service
 func main() {
+
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Cannot load .env file")
+	}
+
+	// Get PORT from .env
+	PORT := os.Getenv("PORT")
 
 	// Initialize logger
 	if err := utils.InitLogger(); err != nil {
@@ -35,7 +44,7 @@ func main() {
 	app.Use(cors.New())
 
 	// Register route
-	handlers.Handler(app)
+	routes.Handler(app)
 
 	// Setup static file serving if needed
 	app.Static("/public", "./public")
@@ -45,5 +54,5 @@ func main() {
 		log.Fatal(err)
 	}
 
-	log.Fatal(app.Listen(":1234"))
+	log.Fatal(app.Listen(":" + PORT))
 }
