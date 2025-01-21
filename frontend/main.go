@@ -11,6 +11,7 @@ import (
 	"github.com/gofiber/template/html/v2"
 )
 
+// Main configures the route for the Photo Upload service
 func main() {
 
 	// Initialize logger
