@@ -3,10 +3,10 @@ module github.com/30Piraten/snapflow
 go 1.23.4
 
 require (
-	github.com/aws/aws-sdk-go v1.55.6
 	github.com/aws/aws-sdk-go-v2 v1.33.0
 	github.com/gofiber/fiber/v2 v2.52.6
 	github.com/gofiber/template/html/v2 v2.1.3
+	go.uber.org/zap v1.27.0
 )
 
 require (
@@ -26,7 +26,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.33.9 // indirect
 	github.com/aws/smithy-go v1.22.1 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	go.uber.org/zap v1.27.0 // indirect
 )
 
 require (
