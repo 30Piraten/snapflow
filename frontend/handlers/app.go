@@ -2,12 +2,17 @@ package handlers
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"image"
 	"image/jpeg"
+	"image/png"
 	"mime/multipart"
+	"os"
+	"strings"
 	"sync"
 
+	"github.com/30Piraten/snapflow/routes"
 	"github.com/30Piraten/snapflow/utils"
 	"github.com/gofiber/fiber/v2"
 	"go.uber.org/zap"
@@ -36,6 +41,18 @@ type FileProcessingResult struct {
 	Path     string
 }
 
+// Handler configured the routes for our photo upload service
+func Handler(app *fiber.App) {
+	// Save the upload form
+	app.Get("/", ServeUploadForm)
+
+	// Handle form submissions
+	app.Post("/submit-order", HandleOrderSubmission)
+
+	// Register the presigned URL route
+	routes.Upload(app)
+}
+
 // ServeUploadForm handles rendering the upload form
 func ServeUploadForm(c *fiber.Ctx) error {
 	return c.Render("index", fiber.Map{
@@ -56,7 +73,7 @@ func HandleOrderSubmission(c *fiber.Ctx) error {
 	// Generate presigned URL
 	presignedResponse, err := utils.GeneratePresignedURL(order)
 	if err != nil {
-		return handleError(c, fiber.StatusInternalServerError, "Failed to generate presigned URL")
+		return handleError(c, fiber.StatusInternalServerError, "Failed to generate presigned URL", err)
 	}
 
 	// Process uploaded photos
@@ -126,7 +143,7 @@ func processUploadedFiles(c *fiber.Ctx, order *utils.PhotoOrder) error {
 		}(file)
 	}
 
-	// Close aresults channel after all processing is complete
+	// Close results channel after all processing is complete
 	go func() {
 		wg.Wait()
 		close(results)
@@ -148,9 +165,15 @@ func processUploadedFiles(c *fiber.Ctx, order *utils.PhotoOrder) error {
 }
 
 // processFile handles the processing of a single file
+// using the image processing logic
 func processFile(file *multipart.FileHeader) FileProcessingResult {
 	result := FileProcessingResult{
 		Filename: file.Filename,
+	}
+
+	// Validate file size
+	if file.Size > MaxFileSize {
+		result.Error = fmt.Errorf("file exceeds maximum szie of 100MB")
 	}
 
 	// Validate MIME type
@@ -160,7 +183,7 @@ func processFile(file *multipart.FileHeader) FileProcessingResult {
 	}
 
 	// Process the image
-	processedImage, err := processImage(file)
+	processedImage, format, err := processImage(file)
 	if err != nil {
 		result.Error = err
 		return result
@@ -168,12 +191,48 @@ func processFile(file *multipart.FileHeader) FileProcessingResult {
 
 	// Save the processed image
 	result.Path = fmt.Sprintf("./uploads/%s", file.Filename)
-	if err := saveProcessedImage(processedImage, result.Path); err != nil {
+	if err := saveProcessedImage(processedImage, format, result.Path); err != nil {
 		result.Error = err
 		return result
 	}
 
 	return result
+}
+
+// ValidateOrder checks if all required fields are present and valid
+func validateOrder(order *utils.PhotoOrder) error {
+	if order == nil {
+		return errors.New("order cannot be nil")
+	}
+
+	var missingFields []string
+
+	if strings.TrimSpace(order.FullName) == "" {
+		missingFields = append(missingFields, "full name")
+	}
+	if strings.TrimSpace(order.Email) == "" {
+		missingFields = append(missingFields, "email")
+	}
+	if strings.TrimSpace(order.Location) == "" {
+		missingFields = append(missingFields, "location")
+	}
+	if strings.TrimSpace(order.Size) == "" {
+		missingFields = append(missingFields, "size")
+	}
+	if strings.TrimSpace(order.PaperType) == "" {
+		missingFields = append(missingFields, "paper type")
+	}
+
+	if len(missingFields) > 0 {
+		return fmt.Errorf("missing required fields: %s", strings.Join(missingFields, ", "))
+	}
+
+	// Basic email validation
+	if !strings.Contains(order.Email, "@") || !strings.Contains(order.Email, ".") {
+		return errors.New("invalid email format")
+	}
+
+	return nil
 }
 
 // Helper functions
@@ -182,32 +241,73 @@ func isValidMimeType(mimeType string) bool {
 	return mimeType == "image/jpeg" || mimeType == "image/png"
 }
 
-func processImage(file *multipart.FileHeader) (image.Image, error) {
+// processImage handles the image processing with proper format detection
+func processImage(file *multipart.FileHeader) (image.Image, string, error) {
 	src, err := file.Open()
 	if err != nil {
-		return nil, fmt.Errorf("failed to open file: %w", err)
+		return nil, "", fmt.Errorf("failed to open the file: %w", err)
 	}
 	defer src.Close()
 
-	// format -> _
-	img, _, err := image.Decode(src)
+	// Decode image and detect format
+	img, format, err := image.Decode(src)
 	if err != nil {
-		return nil, fmt.Errorf("failed to upload image: %w", err)
+		return nil, "", fmt.Errorf("failed to upload image: %w", err)
 	}
 
-	// Resize if needed
+	// Reset the file pointer so it can be resued
+	if _, err := src.Seek(0, 0); err != nil {
+		return nil, "", fmt.Errorf("failed to reset file pointer: %w", err)
+	}
+
+	// Resize the photo / image
 	if file.Size >= ResizeThreshold {
-		img = imaging.Resize(img, int(float64(
-			img.Bounds().Dx())*CompressionFactor), 0, imaging.Lanczos)
+		// Calcultae new dimensions while maintaining aspect ratio
+		bounds := img.Bounds()
+		originalWidth := bounds.Dx()
+		originalHeight := bounds.Dy()
+
+		// We get the newWidth & newHeight here
+		newWidth := int(float64(originalWidth) * CompressionFactor)
+		newHeight := int(float64(originalHeight) * CompressionFactor)
+
+		// Then we perform the resizing of each image
+		resized := image.NewRGBA(image.Rect(0, 0, newWidth, newHeight))
+		// Simple bilinear scaling (changed to sophisticated)
+		for y := 0; y < newHeight; y++ {
+			for x := 0; x < newWidth; x++ {
+				sx := float64(x) * float64(originalWidth) / float64(newWidth)
+				sy := float64(y) * float64(originalHeight) / float64(newHeight)
+				resized.Set(x, y, img.At(int(sx), int(sy)))
+			}
+		}
+		img = resized
+
 	}
 
-	return img, nil
+	return img, format, nil
 }
 
-func saveProcessedImage(img image.Image, path string) error {
+func saveProcessedImage(img image.Image, format string, path string) error {
 	var buf bytes.Buffer
-	if err := jpeg.Encode(&buf, img, &jpeg.Options{Quality: 85}); err != nil {
+	var err error
+
+	switch strings.ToLower(format) {
+	case "jpeg", "jpg":
+		err = jpeg.Encode(&buf, img, &jpeg.Options{Quality: 85})
+	case "png":
+		err = png.Encode(&buf, img)
+	default:
+		return fmt.Errorf("unsupported image format: %s", format)
+	}
+
+	if err != nil {
 		return fmt.Errorf("failed to encode image: %w", err)
+	}
+
+	// Write the buffer to file
+	if err := os.WriteFile(path, buf.Bytes(), 0644); err != nil {
+		return fmt.Errorf("failed to save image: %w", err)
 	}
 
 	return nil
@@ -223,160 +323,3 @@ func handleError(c *fiber.Ctx, status int, message string, err error) error {
 		"details": err.Error(),
 	})
 }
-
-// // Handler configures the routes for our photo upload service
-// func Handler(app *fiber.App) {
-
-// 	// Render the upload form
-// 	app.Get("/", func(c *fiber.Ctx) error {
-// 		return c.Render("index", fiber.Map{
-// 			"Title": "Photo Upload Service",
-// 		})
-// 	})
-
-// 	// Handle form submission
-// 	app.Post("/submit-order", func(c *fiber.Ctx) error {
-
-// 		// Log the start of the request
-// 		utils.Logger.Info("Processing order submission")
-
-// 		// Parse the multipart form
-// 		order := new(utils.PhotoOrder)
-// 		if err := c.BodyParser(order); err != nil {
-// 			utils.Logger.Error("Failed to parse form", zap.Error(err))
-
-// 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-// 				"error": "Failed to parse form",
-// 			})
-// 		}
-
-// 		utils.Logger.Info("Form parsed successfully", zap.String("fullName", order.FullName))
-
-// 		// Use the shared presigned URL generation function
-// 		presignedResponse, err := utils.GeneratePresignedURL(order)
-// 		if err != nil {
-// 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-// 				"error": err.Error(),
-// 			})
-// 		}
-
-// 		form, err := c.MultipartForm()
-// 		if err != nil {
-// 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-// 				"error": "Failed to process uploaded files",
-// 			})
-// 		}
-
-// 		// Get the files from form
-// 		files := form.File["photos"]
-
-// 		// Channel for errors
-// 		errorChan := make(chan error, len(files))
-
-// 		// WaitGroup for synchronisation
-// 		var wg sync.WaitGroup
-
-// 		// Process files concurrently
-// 		for _, file := range files {
-// 			wg.Add(1)
-// 			go func(file *multipart.FileHeader) {
-// 				defer wg.Done()
-
-// 				// Add logic for resize photo uploads by 50%
-// 				// Enforce size limit
-// 				if file.Size > MaxFileSize {
-// 					utils.Logger.Warn("File exceeds the maximum size", zap.String("filename", file.Filename))
-// 					return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-// 						"error": fmt.Sprintf("File %s exceeds the maximum size of 100MB", file.Filename),
-// 					})
-// 				}
-
-// 				// Open file for processing
-// 				src, err := file.Open()
-// 				if err != nil {
-// 					utils.Logger.Error("Failed to open file", zap.String("filename", file.Filename), zap.Error(err))
-// 					return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-// 						"error": fmt.Sprintf("Failed to open file %s", file.Filename),
-// 					})
-// 				}
-// 				defer src.Close()
-
-// 				// Decode image
-// 				img, format, err := image.Decode(src)
-// 				if err != nil {
-// 					utils.Logger.Error("Failed to decode image", zap.String("filename", file.Filename))
-// 					return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-// 						"error": fmt.Sprintf("File %s is not a valid image", file.Filename),
-// 					})
-// 				}
-
-// 				// Reduce size for large files
-// 				if file.Szie >= ResizeThreshold {
-// 					utils.Logger.Info("Resizing image", zap.String("filename", file.Filename))
-// 					img = imaging.Resize(img, int(float64(img.Bounds().Dx())*CompressionFactor), 0, imaging.Lanczos)
-// 				}
-
-// 				// Save compressed image to a buffer
-// 				var buf bytes.Buffer
-// 				if format == "jpeg" {
-// 					err = jpeg.Encode(&buf, img, &jpeg.Options{Quality: 85})
-// 				} else if format == "png" {
-// 					err = png.Encode(&buf, img)
-// 				} else {
-// 					utils.Logger.Warn("Unsupported format for compression", zap.String("format", format))
-// 					return c.Status(fiber.StatusBadGateway).JSON(fiber.Map{
-// 						"error": fmt.Sprintf("File %s has unsupported format %s", file.Filename, format),
-// 					})
-// 				}
-
-// 				if err != nil {
-// 					utils.Logger.Error("Failed to encode image", zap.String("filename", file.Filename), zap.Error(err))
-// 					return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-// 						"error": fmt.Sprintf("Failed to process image %s", file.Filename),
-// 					})
-// 				}
-
-// 				// Validate MIME type
-// 				if file.Header.Get("Content-Type") != "image/jpeg" && file.Header.Get("Content-Type") != "image/png" {
-// 					err := fmt.Errorf("Invalid file type: %s. Only JPEG and PNG are allowed.", file.Header.Get("Content-Type"))
-// 					utils.Logger.Warn("Invalid file type", zap.String("filename", file.Filename))
-// 					errorChan <- err
-// 					return
-// 				}
-
-// 				// Save file locally or to S3
-// 				filePath := fmt.Sprintf("./uploads/%s", file.Filename)
-// 				if err := c.SaveFile(file, filePath); err != nil {
-// 					utils.Logger.Error("Failed to save file", zap.String("filename", file.Filename), zap.Error(err))
-// 					errorChan <- err
-// 					return
-// 				}
-
-// 				utils.Logger.Info("Photos processed successfully", zap.String("filename", file.Filename))
-
-// 			}(file)
-
-// 		}
-
-// 		// Wait for all goroutines to finish
-// 		wg.Wait()
-// 		close(errorChan)
-
-// 		// Check for errors
-// 		if len(errorChan) > 0 {
-// 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-// 				"error": "One or more files failed to upload",
-// 			})
-// 		}
-
-// 		return c.JSON(fiber.Map{
-// 			"message":       "Order received successfully",
-// 			"order":         order,
-// 			"presigned_url": presignedResponse.URL,
-// 			"order_id":      presignedResponse.OrderID,
-// 		})
-// 	})
-
-// 	// Register the presigned URL route
-// 	routes.Upload(app)
-// }
