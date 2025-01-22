@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/30Piraten/snapflow/utils"
+	"github.com/gofiber/fiber/v2"
 )
 
 // AllowedFileExtensions defines permitted image file extensions
@@ -49,6 +50,28 @@ func ValidateOrder(order *utils.PhotoOrder) error {
 	// Basic email validation
 	if !strings.Contains(order.Email, "@") || !strings.Contains(order.Email, ".") {
 		return errors.New("invalid email format")
+	}
+
+	return nil
+}
+
+func ValidateUpload(c *fiber.Ctx, files []*multipart.FileHeader) error {
+
+	// Check the total request size
+	if c.Request().Header.ContentLength() > MaxTotalUploadSize {
+		return fmt.Errorf("total upload size exceeds %d bytes", MaxTotalUploadSize)
+	}
+
+	// Validate file count
+	if len(files) > MaxFileCount {
+		return fmt.Errorf("too many files upload, max allowed is %d", MaxFileCount)
+	}
+
+	// Validate each file size
+	for _, file := range files {
+		if file.Size > MaxFileSize {
+			return fmt.Errorf("file %s exceeds max size of %d bytes", file.Filename, MaxFileSize)
+		}
 	}
 
 	return nil

@@ -8,11 +8,9 @@ import (
 	"image/jpeg"
 	"image/png"
 	"math"
-	"mime/multipart"
 	"os"
 	"sync"
 
-	"github.com/gofiber/fiber/v2"
 	"github.com/nfnt/resize"
 	"go.uber.org/zap"
 )
@@ -23,57 +21,6 @@ func NewImageProcessor(logger *zap.Logger) *ImageProcessor {
 		logger: logger,
 		cache:  &sync.Map{},
 	}
-}
-
-func ValidateUpload(c *fiber.Ctx, files []*multipart.FileHeader) error {
-
-	// Check the total request size
-	if c.Request().Header.ContentLength() > MaxTotalUploadSize {
-		return fmt.Errorf("total upload size exceeds %d bytes", MaxTotalUploadSize)
-	}
-
-	// Validate file count
-	if len(files) > MaxFileCount {
-		return fmt.Errorf("too many files upload, max allowed is %d", MaxFileCount)
-	}
-
-	// Validate each file size
-	for _, file := range files {
-		if file.Size > MaxFileSize {
-			return fmt.Errorf("file %s exceeds max size of %d bytes", file.Filename, MaxFileSize)
-		}
-	}
-
-	return nil
-}
-
-func (p *ImageProcessor) ValidateAndProcessImage(imgData []byte, opts ProcessingOptions) (image.Image, error) {
-
-	// We must check the file size first before validating or processing
-	fileSize := int64(len(imgData))
-
-	if fileSize > MaxFileSize {
-		return nil, fmt.Errorf("file szie %d bytes exceeds maximum allowed szie of %d bytes", fileSize, MaxFileSize)
-	}
-
-	// Next we decode the image
-	img, format, err := image.Decode(bytes.NewReader(imgData))
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode image: %w", err)
-	}
-
-	// We set the format of the image if it's not specified || unknown
-	if opts.Format == "" {
-		opts.Format = format
-	}
-
-	// Next, if the file is between 10MB and 100MB, we set the target size
-	if fileSize > TargetFileSize {
-		opts.TargetSizeBytes = TargetFileSize
-		return p.ProcessImageWithSizeTarget(img, opts)
-	}
-
-	return img, nil
 }
 
 func (p *ImageProcessor) ProcessImageWithSizeTarget(originalImage image.Image, opts ProcessingOptions) (image.Image, error) {
