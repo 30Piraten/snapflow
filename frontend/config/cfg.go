@@ -15,7 +15,7 @@ func S3Client() (*s3.Client, error) {
 	// Load .env file
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("failed to load ENV file")
+		log.Fatal("failed to load .env file")
 	}
 
 	// Get region from .env
