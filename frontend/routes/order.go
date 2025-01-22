@@ -24,7 +24,7 @@ func HandleOrderSubmission(c *fiber.Ctx) error {
 	}
 
 	// Process uploaded photos
-	err = svc.ProcessUploadedFiles(c, order)
+	err = svc.ProcessUploadedFiles(c)
 	if err != nil {
 		return utils.HandleError(c, fiber.StatusInternalServerError, "Failed to process files", err)
 	}
