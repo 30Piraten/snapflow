@@ -15,6 +15,22 @@ import (
 // Main configures the route for the Photo Upload service
 func main() {
 
+	// Create a new instance of the template engine
+	engine := html.New("./views", ".html")
+
+	// Enable template engine reloading in development
+	engine.Reload(true) // Enable this during development
+	// Create a new Fiber app with the template engine
+	app := fiber.New(fiber.Config{
+		Views: engine,
+
+		// Fiber uses bodyLimit to enforce request size limit
+		// which for some reason might be too low. Thus if the
+		// uploaded file exceeds this limit, the request is rejected
+		// before the application logic runs. Hence the direct use here
+		BodyLimit: 100 * 1024 * 1024, // 100MB
+	})
+
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Cannot load .env file")
@@ -28,17 +44,6 @@ func main() {
 		log.Fatalf("Failed to initalize logger: %v", err)
 	}
 	defer utils.Logger.Sync()
-
-	// Create a new instance of the template engine
-	engine := html.New("./views", ".html")
-
-	// Enable template engine reloading in development
-	engine.Reload(true) // Enable this during development
-
-	// Create a new Fiber app with the template engine
-	app := fiber.New(fiber.Config{
-		Views: engine,
-	})
 
 	// Enable CORS
 	app.Use(cors.New())
