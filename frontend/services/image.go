@@ -107,72 +107,114 @@ func (p *ImageProcessor) ValidateAndProcessImage(imgData []byte, opts Processing
 }
 
 func (p *ImageProcessor) ProcessImageWithSizeTarget(originalImage image.Image, opts ProcessingOptions) (image.Image, error) {
-
-	// First try: just compression
 	var buf bytes.Buffer
-	img, err := p.ProcessImage(originalImage, opts)
+
+	// First we will try an initial compression with high quality
+	initialOpts := opts
+	initialOpts.Quality = HighQuality
+
+	img, err := p.ProcessImage(originalImage, initialOpts)
 	if err != nil {
 		return nil, err
 	}
 
-	if opts.Format == "jpeg" {
-		err = jpeg.Encode(&buf, img, &jpeg.Options{
-			Quality: opts.Quality,
-		})
-	} else {
-		err = png.Encode(&buf, img)
-	}
-
-	if err != nil {
+	// Lets check the size of the file with the initial compression
+	if err = jpeg.Encode(&buf, img, &jpeg.Options{Quality: initialOpts.Quality}); err != nil {
 		return nil, err
 	}
 
 	currentSize := buf.Len()
 
-	// if we're already under target size, return
-	if int64(currentSize) <= opts.TargetSizeBytes {
-		return img, nil
+	// If the file is still too large, calculate reduction ratio and resize
+	if int64(currentSize) > opts.TargetSizeBytes {
+		// We must calculate the dimension reduction ratio
+		reductionRatio := math.Sqrt(float64(opts.TargetSizeBytes) / float64(currentSize))
+
+		bounds := originalImage.Bounds()
+		originalWidth := bounds.Dx()
+		originalHeight := bounds.Dy()
+
+		// Then we update the dimensions
+		opts.MaxWidth = int(float64(originalWidth) * reductionRatio)
+		opts.MaxHeight = int(float64(originalHeight) * reductionRatio)
+
+		// If the file || image is still too large, reduce quality
+		if opts.Quality > LowQuality {
+			opts.Quality = LowQuality
+		}
+
+		// Process with new settings
+		img, err = p.ProcessImage(originalImage, opts)
+		if err != nil {
+			return nil, err
+		}
+
+		// Verify final size
+		buf.Reset()
+		if err = jpeg.Encode(&buf, img, &jpeg.Options{Quality: opts.Quality}); err != nil {
+			return nil, err
+		}
 	}
 
-	// Calculate necessary reduction ratio
-	reductionRatio := float64(opts.TargetSizeBytes) / float64(currentSize)
+	// if opts.Format == "jpeg" {
+	// 	err = jpeg.Encode(&buf, img, &jpeg.Options{
+	// 		Quality: opts.Quality,
+	// 	})
+	// } else {
+	// 	err = png.Encode(&buf, img)
+	// }
 
-	// Adjust dimensions to meet target size while preserving aspect ratio
-	bounds := originalImage.Bounds()
-	originalWidth := bounds.Dx()
-	originalHeight := bounds.Dy()
+	// if err != nil {
+	// 	return nil, err
+	// }
 
-	// Calculate new dimensions based on reduction ratio
-	newWidth := int(math.Sqrt(reductionRatio) * float64(originalWidth))
-	newHeight := int(math.Sqrt(reductionRatio) * float64(originalHeight))
+	// currentSize := buf.Len()
 
-	// Update options with new dimensions
-	opts.MaxHeight = newHeight
-	opts.MaxWidth = newWidth
+	// // if we're already under target size, return
+	// if int64(currentSize) <= opts.TargetSizeBytes {
+	// 	return img, nil
+	// }
 
-	// Try processing with new dimensions
-	img, err = p.ProcessImage(originalImage, opts)
-	if err != nil {
-		return nil, err
-	}
+	// // Calculate necessary reduction ratio
+	// reductionRatio := float64(opts.TargetSizeBytes) / float64(currentSize)
 
-	// Verify final size
-	buf.Reset()
-	if opts.Format == "jpeg" {
-		err = jpeg.Encode(&buf, img, &jpeg.Options{Quality: opts.Quality})
-	} else {
-		err = png.Encode(&buf, img)
-	}
+	// // Adjust dimensions to meet target size while preserving aspect ratio
+	// bounds := originalImage.Bounds()
+	// originalWidth := bounds.Dx()
+	// originalHeight := bounds.Dy()
 
-	if err != nil {
-		return nil, err
-	}
+	// // Calculate new dimensions based on reduction ratio
+	// newWidth := int(math.Sqrt(reductionRatio) * float64(originalWidth))
+	// newHeight := int(math.Sqrt(reductionRatio) * float64(originalHeight))
+
+	// // Update options with new dimensions
+	// opts.MaxHeight = newHeight
+	// opts.MaxWidth = newWidth
+
+	// // Try processing with new dimensions
+	// img, err = p.ProcessImage(originalImage, opts)
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	// // Verify final size
+	// buf.Reset()
+	// if opts.Format == "jpeg" {
+	// 	err = jpeg.Encode(&buf, img, &jpeg.Options{Quality: opts.Quality})
+	// } else {
+	// 	err = png.Encode(&buf, img)
+	// }
+
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	finalSize := buf.Len()
 	p.logger.Info("Image processing results",
-		zap.Int("original_size", currentSize),
-		zap.Int("final_size", finalSize),
+		zap.Int64("original_size", int64(currentSize)),
+		zap.Int64("final_size", int64(finalSize)),
 		zap.Float64("reduction_ratio", float64(finalSize)/float64(currentSize)),
+		zap.Int("final_quality", opts.Quality)
 	)
 
 	return img, nil
