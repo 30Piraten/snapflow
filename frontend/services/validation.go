@@ -3,10 +3,20 @@ package services
 import (
 	"errors"
 	"fmt"
+	"mime/multipart"
+	"net/http"
+	"path/filepath"
 	"strings"
 
 	"github.com/30Piraten/snapflow/utils"
 )
+
+// AllowedFileExtensions defines permitted image file extensions
+var AllowedFileExtensions = map[string]struct{}{
+	".jpg":  {},
+	".jpeg": {},
+	".png":  {},
+}
 
 // ValidateOrder checks if all required fields are present and valid
 func ValidateOrder(order *utils.PhotoOrder) error {
@@ -39,6 +49,38 @@ func ValidateOrder(order *utils.PhotoOrder) error {
 	// Basic email validation
 	if !strings.Contains(order.Email, "@") || !strings.Contains(order.Email, ".") {
 		return errors.New("invalid email format")
+	}
+
+	return nil
+}
+
+// ValidateUploadedFile validates file name, extension and MIME type
+func ValidateUploadedFile(file *multipart.FileHeader) error {
+	// Extract file extension
+	extension := strings.ToLower(filepath.Ext(file.Filename))
+
+	// Validate file extension
+	if _, allowed := AllowedFileExtensions[extension]; !allowed {
+		return fmt.Errorf("invalid file type: %s, only JPG and PNG are allowed", extension)
+	}
+
+	// Open the file to check its MIME type
+	src, err := file.Open()
+	if err != nil {
+		return fmt.Errorf("failed to open file for validation: %w", err)
+	}
+	defer src.Close()
+
+	// Buffer the first 512 bytes for MIME type detection
+	buffer := make([]byte, 512)
+	if _, err := src.Read(buffer); err != nil {
+		return fmt.Errorf("failed to read file for MIME type validation: %w", err)
+	}
+
+	// Check MIME type
+	mimeType := http.DetectContentType(buffer)
+	if !strings.HasPrefix(mimeType, "image/") {
+		return fmt.Errorf("invalid file type detected: %s", mimeType)
 	}
 
 	return nil

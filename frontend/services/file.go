@@ -11,37 +11,27 @@ import (
 
 	"github.com/30Piraten/snapflow/utils"
 	"github.com/gofiber/fiber/v2"
+	"go.uber.org/zap"
 )
 
-// Constants for file size
-const (
-	MaxConcurrentProcessing = 5
-)
-
-type ResponseData struct {
-	Message      string            `json:"message"`
-	Order        *utils.PhotoOrder `json:"order"`
-	PresignedURL string            `json:"presigned_url"`
-	OrderID      string            `json:"order_id"`
-}
-
-// FileProcessingResult holds the result of processing a single file
-type FileProcessingResult struct {
-	Filename string
-	Path     string
-	Size     int64
-	Error    error
-}
-
-func ProcessUploadedFiles(c *fiber.Ctx, order *utils.PhotoOrder) error {
+func ProcessUploadedFiles(c *fiber.Ctx) error {
 	form, err := c.MultipartForm()
 	if err != nil {
-		return fmt.Errorf("failed to process multipart form: %w", err)
+		utils.Logger.Error("failed to process multipart form: %w", zap.Error(err))
+		return c.Status(fiber.StatusBadRequest).JSON(ProcessingError{
+			Type:    "Validation",
+			Code:    ErrCodeInvalidRequest,
+			Message: "Failed to parse multipart form",
+		})
 	}
 
 	files := form.File["photos"]
-	if len(files) == 0 {
-		return fmt.Errorf("no files uploaded")
+	if err := ValidateUpload(c, files); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(ProcessingError{
+			Type:    "Validation",
+			Code:    ErrCodeFailedFileUpload,
+			Message: "No files uploaded",
+		})
 	}
 
 	// Create buffered channels for results and limiting concurrency
@@ -79,90 +69,88 @@ func ProcessUploadedFiles(c *fiber.Ctx, order *utils.PhotoOrder) error {
 	}
 
 	if len(errors) > 0 {
-		return fmt.Errorf("file processing errors: %v", errors)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"errors": errors,
+		})
 	}
 
-	return nil
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "All files processed successfully",
+	})
 }
 
 func processFile(file *multipart.FileHeader) FileProcessingResult {
 
-	// Check the file size first
-	if file.Size > MaxFileSize {
+	// Validate file for security
+	if err := ValidateUploadedFile(file); err != nil {
 		return FileProcessingResult{
-			Error: fmt.Errorf("file size %d bytes exceeds maximum allowed size of %d bytes", file.Size, MaxFileSize),
+			Error: &ProcessingError{
+				Type:    "Validation",
+				Code:    ErrCodeInvalidFormat,
+				Message: err.Error(),
+			},
 		}
-	}
-
-	// Initialise processor
-	processor := NewImageProcessor(utils.Logger)
-
-	// Define processing options with target size for large files
-	opts := ProcessingOptions{
-		Quality: HighQuality,
-		Format:  "jpeg",
-	}
-
-	// set the target if file is larger than 10MB
-	if file.Size > TargetFileSize {
-		opts.TargetSizeBytes = TargetFileSize
 	}
 
 	// Open the file
 	source, err := file.Open()
 	if err != nil {
 		return FileProcessingResult{
-			Error: fmt.Errorf("failed to open the file: %w", err),
+			Error: &ProcessingError{
+				Type:    "FileError",
+				Code:    ErrCodeFileOpen,
+				Message: fmt.Sprintf("failed to open the file: %v", err),
+			},
 		}
 	}
 	defer source.Close()
-
-	// Decode file data
-	// img, _, err := image.Decode(source)
-	// if err != nil {
-	// 	return FileProcessingResult{
-	// 		Error: err,
-	// 	}
-	// }
 
 	// Read file data
 	img, err := io.ReadAll(source)
 	if err != nil {
 		return FileProcessingResult{
-			Error: fmt.Errorf("failed to read file data: %w", err),
+			Error: &ProcessingError{
+				Type:    "FileError",
+				Code:    ErrCodeFileRead,
+				Message: fmt.Sprintf("failed to read file data: %v", err),
+			},
 		}
+	}
+
+	// Initialise processor
+	processor := NewImageProcessor(utils.Logger)
+	opts := ProcessingOptions{
+		Quality:         HighQuality,
+		TargetSizeBytes: TargetFileSize,
+		Format:          "jpeg",
 	}
 
 	// Process the image with size validation
 	processedImage, err := processor.ValidateAndProcessImage(img, opts)
 	if err != nil {
-		if strings.Contains(err.Error(), "exceeds maximum allowed size") {
-			return FileProcessingResult{
-				Error: fmt.Errorf("file too large: %w", err),
-			}
-		}
 		return FileProcessingResult{
-			Error: fmt.Errorf("filed to process image: %w", err),
+			Error: &ProcessingError{
+				Type:    "Processing",
+				Code:    ErrCodeProcessingFailed,
+				Message: fmt.Sprintf("file to process image: %v", err),
+			},
 		}
 	}
 
-	// // Create uploads directory if it doesn't exist
-	// if err := os.MkdirAll("./uploads", 0775); err != nil {
-	// 	return FileProcessingResult{
-	// 		Error: fmt.Errorf("failed to create uploads directory: %w", err),
-	// 	}
-	// }
-
 	// Since most photos are often uploaded with the same camera name
 	// Lets generate a unique filename to avoid collisions
-	filename := generateUniqueFileName(file.Filename)
+	// filename := generateUniqueFileName(file.Filename)
 	// outputPath := filepath.Join("./uploads", filename)
 
 	// Then we save the processed image
-	outputPath := fmt.Sprintf("./uploads/%s", filename) // file.Filename
+	outputPath := fmt.Sprintf("./%s/%s", ProcessedImageDir, generateUniqueFileName(file.Filename))
 	if err := processor.SaveImage(processedImage, outputPath, opts); err != nil {
 		return FileProcessingResult{
-			Error: fmt.Errorf("failed to save processed image: %w", err),
+			Error: &ProcessingError{
+				Type:    "FileError",
+				Code:    ErrCodeFileSave,
+				Message: fmt.Sprintf("failed to save processed image: %v", err),
+			},
 		}
 	}
 
