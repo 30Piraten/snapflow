@@ -3,13 +3,16 @@ package utils
 import (
 	"context"
 	"fmt"
+	"log"
 	"mime/multipart"
+	"os"
 	"time"
 
 	cfg "github.com/30Piraten/snapflow/config"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/google/uuid"
+	"github.com/joho/godotenv"
 )
 
 // PhotoOrder represents the structure of o÷ur form data
@@ -29,6 +32,12 @@ type PresignedURLResponse struct {
 }
 
 func GeneratePresignedURL(order *PhotoOrder) (*PresignedURLResponse, error) {
+
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("failed to load .env file")
+	}
+
 	if order.FullName == "" || order.Email == "" {
 		return nil, fmt.Errorf("missing required fields for presigned URL generation")
 	}
@@ -41,10 +50,13 @@ func GeneratePresignedURL(order *PhotoOrder) (*PresignedURLResponse, error) {
 		return nil, fmt.Errorf("failed to initialize s3 client: %v", err)
 	}
 
+	// Get bucket name from .env
+	bucketName := os.Getenv("BUCKET_NAME")
+
 	presignedClient := s3.NewPresignClient(s3Client)
 	presignedPut, err := presignedClient.PresignPutObject(context.TODO(),
 		&s3.PutObjectInput{
-			Bucket: aws.String("originalS3"),
+			Bucket: aws.String(bucketName),
 			Key:    aws.String(s3key),
 			Metadata: map[string]string{
 				"full_name":  order.FullName,
