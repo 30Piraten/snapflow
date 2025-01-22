@@ -1,6 +1,7 @@
 package services
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"image"
@@ -17,9 +18,11 @@ import (
 
 // Quality settings for image processing
 const (
-	HighQuality   = 90
-	MediumQuality = 75
-	LowQuality    = 60
+	HighQuality    = 90
+	MediumQuality  = 75
+	LowQuality     = 60
+	MaxFileSize    = 100 * 100 * 1024 // 100MB in bytes
+	TargetFileSize = 10 * 1024 * 1024 // 10MB in bytes
 )
 
 // ProcessingOptions defines configuration for image processing
@@ -31,6 +34,7 @@ type ProcessingOptions struct {
 	Format           string
 	PreserveMetadata bool
 	OptimiseSizeOnly bool
+	TargetSizeBytes  int64 // -> New field for target file size
 }
 
 // ImageProcessor handles all image processing operations
@@ -68,6 +72,108 @@ func (p *ImageProcessor) ProcessImage(img image.Image, opts ProcessingOptions) (
 	if opts.OptimiseSizeOnly {
 		img = p.OptimiseSize(img)
 	}
+
+	return img, nil
+}
+
+func (p *ImageProcessor) ValidateAndProcessImage(imgData []byte, opts ProcessingOptions) (image.Image, error) {
+
+	// We must check the file size first before validating or processing
+	fileSize := int64(len(imgData))
+
+	if fileSize > MaxFileSize {
+		return nil, fmt.Errorf("file szie %d bytes exceeds maximum allowed szie of %d bytes", fileSize, MaxFileSize)
+	}
+
+	// Next we decode the image
+	img, format, err := image.Decode(bytes.NewReader(imgData))
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode image: %w", err)
+	}
+
+	// We set the format of the image if it's not specified || unknown
+	if opts.Format == "" {
+		opts.Format = format
+	}
+
+	// Next, if the file || image is between 10MB and 100MB, we set the target size
+	if fileSize >= TargetFileSize { // TODO > || >=
+		opts.TargetSizeBytes = TargetFileSize
+		return p.ProcessImageWithSizeTarget(img, opts)
+	}
+
+	// For files || images under the 10MB mark, we just process normally
+	return p.ProcessImage(img, opts)
+}
+
+func (p *ImageProcessor) ProcessImageWithSizeTarget(originalImage image.Image, opts ProcessingOptions) (image.Image, error) {
+
+	// First try: just compression
+	var buf bytes.Buffer
+	img, err := p.ProcessImage(originalImage, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	if opts.Format == "jpeg" {
+		err = jpeg.Encode(&buf, img, &jpeg.Options{
+			Quality: opts.Quality,
+		})
+	} else {
+		err = png.Encode(&buf, img)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	currentSize := buf.Len()
+
+	// if we're already under target size, return
+	if int64(currentSize) <= opts.TargetSizeBytes {
+		return img, nil
+	}
+
+	// Calculate necessary reduction ratio
+	reductionRatio := float64(opts.TargetSizeBytes) / float64(currentSize)
+
+	// Adjust dimensions to meet target size while preserving aspect ratio
+	bounds := originalImage.Bounds()
+	originalWidth := bounds.Dx()
+	originalHeight := bounds.Dy()
+
+	// Calculate new dimensions based on reduction ratio
+	newWidth := int(math.Sqrt(reductionRatio) * float64(originalWidth))
+	newHeight := int(math.Sqrt(reductionRatio) * float64(originalHeight))
+
+	// Update options with new dimensions
+	opts.MaxHeight = newHeight
+	opts.MaxWidth = newWidth
+
+	// Try processing with new dimensions
+	img, err = p.ProcessImage(originalImage, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	// Verify final size
+	buf.Reset()
+	if opts.Format == "jpeg" {
+		err = jpeg.Encode(&buf, img, &jpeg.Options{Quality: opts.Quality})
+	} else {
+		err = png.Encode(&buf, img)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	finalSize := buf.Len()
+	p.logger.Info("Image processing results",
+		zap.Int("original_size", currentSize),
+		zap.Int("final_size", finalSize),
+		zap.Float64("reduction_ratio", float64(finalSize)/float64(currentSize)),
+	)
 
 	return img, nil
 }
