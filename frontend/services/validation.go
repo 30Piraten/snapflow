@@ -23,7 +23,7 @@ var AllowedFileExtensions = map[string]struct{}{
 }
 
 // ValidateOrder validates a PhotoOrder instance, returning an error if required fields are missing.
-func ValidateOrder(order *utils.PhotoOrder) error {
+func ValidateOrder(c *fiber.Ctx, order *utils.PhotoOrder) error {
 	if order == nil {
 		return errors.New("order cannot be nil")
 	}
@@ -31,19 +31,36 @@ func ValidateOrder(order *utils.PhotoOrder) error {
 	var missingFields []string
 
 	if strings.TrimSpace(order.FullName) == "" {
-		missingFields = append(missingFields, "full name")
+		// missingFields = append(missingFields, "full name")
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error":      "Full name is required",
+			"errorField": "FullName",
+		})
 	}
+
 	if strings.TrimSpace(order.Email) == "" {
-		missingFields = append(missingFields, "email")
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error":      "Email is required",
+			"errorField": "Email",
+		})
 	}
 	if strings.TrimSpace(order.Location) == "" {
-		missingFields = append(missingFields, "location")
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error":      "Print location is required",
+			"errorField": "Location",
+		})
 	}
 	if strings.TrimSpace(order.Size) == "" {
-		missingFields = append(missingFields, "size")
+		return c.Status(fiber.StatusBadGateway).JSON(fiber.Map{
+			"error":      "Print szie is required",
+			"errorField": "Size",
+		})
 	}
 	if strings.TrimSpace(order.PaperType) == "" {
-		missingFields = append(missingFields, "paper type")
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error":      "Paper type is required",
+			"errorField": "PaperType",
+		})
 	}
 
 	if len(missingFields) > 0 {
@@ -54,7 +71,10 @@ func ValidateOrder(order *utils.PhotoOrder) error {
 	emailRegex := `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
 	re := regexp.MustCompile(emailRegex)
 	if !re.MatchString(order.Email) {
-		return nil
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error":      "Invalid email format",
+			"errorField": "Email",
+		})
 	}
 
 	return nil
@@ -129,7 +149,7 @@ func (p *ImageProcessor) ValidateAndProcessImage(imgData []byte, opts Processing
 	// We must validate the file size first
 	fileSize := int64(len(imgData))
 
-	// Reject single file > 100MB
+	// Reject single file > 50MB
 	if fileSize > MaxFileSize {
 		return nil, fmt.Errorf("file szie %d bytes exceeds maximum allowed szie of %d bytes", fileSize, MaxFileSize)
 	}
@@ -145,7 +165,7 @@ func (p *ImageProcessor) ValidateAndProcessImage(imgData []byte, opts Processing
 		opts.Format = format
 	}
 
-	// Next, if the file is between 1MB and 100MB, resize
+	// Next, if the file is between 1MB and 50MB, resize
 	if fileSize > TargetFileSize {
 		opts.TargetSizeBytes = TargetFileSize
 		return p.ProcessImageWithSizeTarget(img, opts)

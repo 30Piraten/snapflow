@@ -12,6 +12,9 @@ import (
 // and return a successful response containing the order details, presigned URL
 // and order ID.
 func HandleOrderSubmission(c *fiber.Ctx) error {
+
+	c.Locals("limit", "50MB")
+
 	utils.Logger.Info("Starting order submission processing")
 
 	// Parse the order details
@@ -52,7 +55,7 @@ func parseOrderDetails(c *fiber.Ctx) (*utils.PhotoOrder, error) {
 	}
 
 	// Validate required fields
-	if err := svc.ValidateOrder(order); err != nil {
+	if err := svc.ValidateOrder(c, order); err != nil {
 		return nil, err
 	}
 

@@ -73,6 +73,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!response.ok) {
                     // Handle server-side validation errors
                     if (data.errorField) {
+                        window.location.href = data.redirectUrl;
+                        
                         const errorElement = document.getElementById(`${data.errorField.toLowerCase()}Error`);
                         if (errorElement) {
                             errorElement.textContent = data.error;
@@ -94,3 +96,4 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+

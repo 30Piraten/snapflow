@@ -15,6 +15,8 @@ func Handler(app *fiber.App) {
 	// Handle form submissions
 	app.Post("/submit-order", HandleOrderSubmission)
 
+	app.Get("/confirmation", ConfirmationHandler)
+
 	// Register the presigned URL route
 	h.Upload(app)
 }

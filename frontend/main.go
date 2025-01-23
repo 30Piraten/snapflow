@@ -14,7 +14,6 @@ import (
 
 // Main configures the route for the Photo Upload service
 func main() {
-
 	// Create a new instance of the template engine
 	engine := html.New("./views", ".html")
 
@@ -28,7 +27,7 @@ func main() {
 		// which for some reason might be too low. Thus if the
 		// uploaded file exceeds this limit, the request is rejected
 		// before the application logic runs. Hence the direct use here
-		BodyLimit: 50 * 1024 * 1024, // 100MB
+		BodyLimit: 50 * 1024 * 1024, // 50MB
 	})
 
 	err := godotenv.Load()
