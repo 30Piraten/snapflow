@@ -52,3 +52,9 @@ p {
     color : red;
     text-align: center;
 }
+
+.error-message {
+    color: red;
+    margin-bottom: 1em;
+    font-weight: bold;
+}

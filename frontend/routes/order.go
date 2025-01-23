@@ -31,7 +31,7 @@ func HandleOrderSubmission(c *fiber.Ctx) error {
 
 	// Return a successful response
 	return c.JSON(svc.ResponseData{
-		Message:      "Order receibed successfully",
+		Message:      "Order received successfully",
 		Order:        order,
 		PresignedURL: presignedResponse.URL,
 		OrderID:      presignedResponse.OrderID,

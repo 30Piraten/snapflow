@@ -8,6 +8,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/30Piraten/snapflow/utils"
@@ -49,9 +50,11 @@ func ValidateOrder(order *utils.PhotoOrder) error {
 		return fmt.Errorf("missing required fields: %s", strings.Join(missingFields, ", "))
 	}
 
-	// Basic email validation
-	if !strings.Contains(order.Email, "@") || !strings.Contains(order.Email, ".") {
-		return errors.New("invalid email format")
+	// Advanced email validation using regex
+	emailRegex := `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
+	re := regexp.MustCompile(emailRegex)
+	if !re.MatchString(order.Email) {
+		return nil
 	}
 
 	return nil

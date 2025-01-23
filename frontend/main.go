@@ -46,7 +46,15 @@ func main() {
 	defer utils.Logger.Sync()
 
 	// Enable CORS
-	app.Use(cors.New())
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "http://127.0.0.1:1234",
+		AllowMethods: "POST,OPTIONS",
+	}))
+
+	app.Use(func(c *fiber.Ctx) error {
+		log.Printf("Handling request for %s", c.Path())
+		return c.Next()
+	})
 
 	// Register route
 	routes.Handler(app)
