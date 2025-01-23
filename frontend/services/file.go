@@ -14,10 +14,20 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+// Error returns a string representation of the error in the format "type: code - message".
 func (e *ProcessingError) Error() string {
 	return fmt.Sprintf("%s: %s - %s", e.Type, e.Code, e.Message)
 }
 
+// ProcessUploadedFiles parses the uploaded files and processes them accordingly.
+// If there is a single file, it is processed and a JSON response is returned
+// containing the file path.
+// If there are multiple files, they are processed concurrently and a JSON
+// response is returned containing the paths of the processed files. If there
+// were any errors while processing the files, they are collected and returned
+// in the response as well.
+// The function returns an error if there were any issues while processing the
+// files.
 func ProcessUploadedFiles(c *fiber.Ctx) error {
 	// Parse the uploaded files
 	form, err := c.MultipartForm()
