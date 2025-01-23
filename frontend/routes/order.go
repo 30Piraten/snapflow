@@ -23,7 +23,7 @@ func HandleOrderSubmission(c *fiber.Ctx) error {
 		return utils.HandleError(c, fiber.StatusInternalServerError, "Failed to generate presigned URL", err)
 	}
 
-	// Process uploaded photos
+	// Process uploaded photos -> TODO
 	err = svc.ProcessUploadedFiles(c)
 	if err != nil {
 		return utils.HandleError(c, fiber.StatusInternalServerError, "Failed to process files", err)
