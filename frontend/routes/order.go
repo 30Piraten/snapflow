@@ -1,9 +1,14 @@
 package routes
 
 import (
+	"log"
+	"os"
+	"strings"
+
 	svc "github.com/30Piraten/snapflow/services"
 	"github.com/30Piraten/snapflow/utils"
 	"github.com/gofiber/fiber/v2"
+	"github.com/joho/godotenv"
 	"go.uber.org/zap"
 )
 
@@ -13,6 +18,26 @@ import (
 // and order ID.
 func HandleOrderSubmission(c *fiber.Ctx) error {
 
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Failed to load .env file")
+	}
+
+	// trustedOrigin defines the trsuted frontend domain
+	trustedOrigin := os.Getenv("TRUSTED_ORIGIN")
+
+	// Get the Referer and Origin headers
+	referer := c.Get("Referer")
+	origin := c.Get("Origin")
+
+	// Check if the Referer or origin header matches the trusted domain
+	if !strings.HasPrefix(referer, trustedOrigin) && origin != trustedOrigin {
+		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
+			"message": "Forbidden: Invalid origin or referer",
+		})
+	}
+
+	// Limit the upload size to ensure large files are rejected early
 	c.Locals("limit", "50MB")
 
 	utils.Logger.Info("Starting order submission processing")
