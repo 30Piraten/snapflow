@@ -65,6 +65,9 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 const response = await fetch('/submit-order', {
                     method: 'POST',
+                    // headers: {
+                    //     'Authorization': ""
+                    // },
                     body: formData
                 });
 
@@ -73,7 +76,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!response.ok) {
                     // Handle server-side validation errors
                     if (data.errorField) {
-                        window.location.href = data.redirectUrl;
                         
                         const errorElement = document.getElementById(`${data.errorField.toLowerCase()}Error`);
                         if (errorElement) {
