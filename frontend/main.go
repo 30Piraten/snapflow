@@ -3,11 +3,13 @@ package main
 import (
 	"log"
 	"os"
+	"time"
 
 	"github.com/30Piraten/snapflow/routes"
 	"github.com/30Piraten/snapflow/utils"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/template/html/v2"
 	"github.com/joho/godotenv"
 )
@@ -48,6 +50,11 @@ func main() {
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: "http://127.0.0.1:1234",
 		AllowMethods: "POST,OPTIONS",
+	}))
+
+	app.Use(limiter.New(limiter.Config{
+		Max:        5,
+		Expiration: 1 * time.Minute,
 	}))
 
 	app.Use(func(c *fiber.Ctx) error {
