@@ -1,8 +1,10 @@
 package services
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
+	"image"
 	"mime/multipart"
 	"net/http"
 	"path/filepath"
@@ -17,6 +19,37 @@ var AllowedFileExtensions = map[string]struct{}{
 	".jpg":  {},
 	".jpeg": {},
 	".png":  {},
+}
+
+func (p *ImageProcessor) ValidateAndProcessImage(imgData []byte, opts ProcessingOptions) (image.Image, error) {
+
+	// We must validate the file size first
+	fileSize := int64(len(imgData))
+
+	// Reject single file > 100MB
+	if fileSize > MaxFileSize {
+		return nil, fmt.Errorf("file szie %d bytes exceeds maximum allowed szie of %d bytes", fileSize, MaxFileSize)
+	}
+
+	// Next we securely decode the image
+	img, format, err := image.Decode(bytes.NewReader(imgData))
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode image: %w", err)
+	}
+
+	// And set the format of the image if it's not specified
+	if opts.Format == "" {
+		opts.Format = format
+	}
+
+	// Next, if the file is between 1MB and 100MB, resize
+	if fileSize > TargetFileSize {
+		opts.TargetSizeBytes = TargetFileSize
+		return p.ProcessImageWithSizeTarget(img, opts)
+	}
+
+	// Accept file <=1MB without resizing
+	return img, nil
 }
 
 // ValidateOrder checks if all required fields are present and valid
