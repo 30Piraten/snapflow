@@ -20,11 +20,11 @@ const (
 
 	ProcessedImageDir = "uploads"
 
-	MaxConcurrentProcessing = 3                // Max concurrent uploads
-	MaxFileCount            = 10               // Maximum 10 files per request
-	TargetFileSize          = 1 * 1024 * 1024  // 1MB total for all sizes
-	MaxFileSize             = 100 * 100 * 1024 // 100MB per file
-	MaxTotalUploadSize      = 5 * 1024 * 1024  // 5MB total for all files
+	MaxConcurrentProcessing = 3               // Max concurrent uploads
+	MaxFileCount            = 10              // Maximum 10 files per request
+	TargetFileSize          = 1 * 1024 * 1024 // 1MB total for all sizes
+	MaxFileSize             = 50 * 100 * 1024 // 50MB per file
+	MaxTotalUploadSize      = 5 * 1024 * 1024 // 5MB total for all files
 )
 
 // ProcessingOptions defines configuration for image processing

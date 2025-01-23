@@ -4,96 +4,98 @@ import (
 	"bytes"
 	"fmt"
 	"image"
-	"sync"
 )
 
 func (p *ImageProcessor) ValidateAndProcessImage(imgData []byte, opts ProcessingOptions) (image.Image, error) {
 
-	// We must check the file size first before validating or processing
+	// We must validate the file size first
 	fileSize := int64(len(imgData))
 
+	// Reject single file > 100MB
 	if fileSize > MaxFileSize {
 		return nil, fmt.Errorf("file szie %d bytes exceeds maximum allowed szie of %d bytes", fileSize, MaxFileSize)
 	}
 
-	// Next we decode the image
+	// Next we securely decode the image
 	img, format, err := image.Decode(bytes.NewReader(imgData))
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode image: %w", err)
 	}
 
-	// We set the format of the image if it's not specified || unknown
+	// And set the format of the image if it's not specified
 	if opts.Format == "" {
 		opts.Format = format
 	}
 
-	// Next, if the file is between 1MB and 100MB, we set the target size
+	// Next, if the file is between 1MB and 100MB, resize
 	if fileSize > TargetFileSize {
 		opts.TargetSizeBytes = TargetFileSize
 		return p.ProcessImageWithSizeTarget(img, opts)
 	}
 
+	// Accept file <=1MB without resizing
 	return img, nil
 }
 
-func (p *ImageProcessor) ValidateAndProcessMultipleImages(files [][]byte, opts ProcessingOptions) ([]image.Image, error) {
-	// Security: Ensure the request adheres to the file limit
-	if len(files) > MaxFileCount {
-		return nil, fmt.Errorf("too many files: %d exceeds maximum allowed %d", len(files), MaxFileCount)
-	}
+// func (p *ImageProcessor) ValidateAndProcessMultipleImages(files [][]byte, opts ProcessingOptions) ([]image.Image, error) {
 
-	var (
-		processedImages = make([]image.Image, len(files))
-		totalSize       int64
-		mu              sync.Mutex
-		wg              sync.WaitGroup
-		errChan         = make(chan error, len(files))
-	)
+// 	// Security: Ensure the request adheres to the file limit
+// 	if len(files) > MaxFileCount {
+// 		return nil, fmt.Errorf("too many files: %d exceeds maximum allowed %d", len(files), MaxFileCount)
+// 	}
 
-	// Calculate total size and validate each file
-	for _, fileData := range files {
-		fileSize := int64(len(fileData))
-		if fileSize > MaxFileSize {
-			return nil, fmt.Errorf("file size %d bytes exceeds maximum allowed size of %d bytes", fileSize, MaxFileSize)
-		}
-		totalSize += fileSize
-	}
+// 	var (
+// 		processedImages = make([]image.Image, len(files))
+// 		totalSize       int64
+// 		mu              sync.Mutex
+// 		wg              sync.WaitGroup
+// 		errChan         = make(chan error, len(files))
+// 	)
 
-	// Goroutine logic for resizing or accepting files
-	for idx, fileData := range files {
-		wg.Add(1)
-		go func(i int, data []byte) {
-			defer wg.Done()
+// 	// Calculate total size and validate each file
+// 	for _, fileData := range files {
+// 		fileSize := int64(len(fileData))
+// 		if fileSize > MaxFileSize {
+// 			return nil, fmt.Errorf("file size %d bytes exceeds maximum allowed size of %d bytes", fileSize, MaxFileSize)
+// 		}
+// 		totalSize += fileSize
+// 	}
 
-			img, err := p.ValidateAndProcessImage(data, opts)
-			if err != nil {
-				errChan <- fmt.Errorf("error processing file %d: %w", i+1, err)
-				return
-			}
+// 	// Goroutine logic for resizing or accepting files
+// 	for idx, fileData := range files {
+// 		wg.Add(1)
+// 		go func(i int, data []byte) {
+// 			defer wg.Done()
 
-			// Strict resizing for total size > 1MB
-			if totalSize > MaxTotalUploadSize {
-				opts.TargetSizeBytes = TargetFileSize
-				img, err = p.ProcessImageWithSizeTarget(img, opts)
-				if err != nil {
-					errChan <- fmt.Errorf("error resizing file %d: %w", i+1, err)
-					return
-				}
-			}
+// 			img, err := p.ValidateAndProcessImage(data, opts)
+// 			if err != nil {
+// 				errChan <- fmt.Errorf("error processing file %d: %w", i+1, err)
+// 				return
+// 			}
 
-			mu.Lock()
-			processedImages[i] = img
-			mu.Unlock()
-		}(idx, fileData)
-	}
+// 			// Strict resizing for total size > 1MB
+// 			if totalSize > MaxTotalUploadSize {
+// 				opts.TargetSizeBytes = TargetFileSize
+// 				img, err = p.ProcessImageWithSizeTarget(img, opts)
+// 				if err != nil {
+// 					errChan <- fmt.Errorf("error resizing file %d: %w", i+1, err)
+// 					return
+// 				}
+// 			}
 
-	wg.Wait()
-	close(errChan)
+// 			mu.Lock()
+// 			processedImages[i] = img
+// 			mu.Unlock()
+// 		}(idx, fileData)
+// 	}
 
-	// Check for any errors during processing
-	if len(errChan) > 0 {
-		return nil, <-errChan
-	}
+// 	wg.Wait()
+// 	close(errChan)
 
-	return processedImages, nil
-}
+// 	// Check for any errors during processing
+// 	if len(errChan) > 0 {
+// 		return nil, <-errChan
+// 	}
+
+// 	return processedImages, nil
+// }
