@@ -11,74 +11,72 @@ import (
 	"time"
 
 	"github.com/30Piraten/snapflow/utils"
+	"github.com/gofiber/fiber/v2"
 )
 
-// func ProcessUploadedFiles(c *fiber.Ctx) error {
-// 	form, err := c.MultipartForm()
-// 	if err != nil {
-// 		utils.Logger.Error("failed to process multipart form: %w", zap.Error(err))
-// 		return c.Status(fiber.StatusBadRequest).JSON(ProcessingError{
-// 			Type:    "Validation",
-// 			Code:    ErrCodeInvalidRequest,
-// 			Message: "Failed to parse multipart form",
-// 		})
-// 	}
+func (e *ProcessingError) Error() string {
+	return fmt.Sprintf("%s: %s - %s", e.Type, e.Code, e.Message)
+}
 
-// 	files := form.File["photos"]
-// 	if err := ValidateUpload(c, files); err != nil {
-// 		return c.Status(fiber.StatusBadRequest).JSON(ProcessingError{
-// 			Type:    "Validation",
-// 			Code:    ErrCodeFailedFileUpload,
-// 			Message: "No files uploaded",
-// 		})
-// 	}
+func ProcessUploadedFiles(c *fiber.Ctx) error {
+	// Parse the uploaded files
+	form, err := c.MultipartForm()
+	if err != nil {
+		return utils.HandleError(c, fiber.StatusBadGateway, "Failed to parse multipart form", err)
+	}
 
-// 	// Create buffered channels for results and limiting concurrency
-// 	results := make(chan FileProcessingResult, len(files))
-// 	semaphore := make(chan struct{}, MaxConcurrentProcessing)
+	files := form.File["photos"]
+	if len(files) == 0 {
+		return utils.HandleError(c, fiber.StatusBadRequest, "No files uploaded", nil)
+	}
 
-// 	// Start a worker pool for file processing
-// 	var wg sync.WaitGroup
-// 	for _, file := range files {
-// 		wg.Add(1)
-// 		go func(file *multipart.FileHeader) {
-// 			defer wg.Done()
+	// Confirm whether its a single file or multiple files
+	opts := ProcessingOptions{
+		Quality:         HighQuality,
+		TargetSizeBytes: TargetFileSize,
+		Format:          "jpeg",
+	}
 
-// 			// Get the semaphore
-// 			semaphore <- struct{}{}
-// 			defer func() { <-semaphore }()
+	// Process single file
+	if len(files) == 1 {
+		result := ProcessFile(files[0], opts)
+		if result.Error != nil {
+			// return utils.HandleError(c, fiber.StatusInternalServerError, "Failed to process file", result.Error)
+			return &ProcessingError{
+				Type:    "Validation",
+				Code:    ErrCodeProcessingFailed,
+				Message: "Failed to process file",
+			}
+		}
 
-// 			result := processFile(file)
-// 			results <- result
-// 		}(file)
-// 	}
+		return c.JSON(fiber.Map{
+			"message":  "File processed successfully",
+			"filePath": result.Path,
+		})
+	}
 
-// 	// Close results channel after all processing is complete
-// 	go func() {
-// 		wg.Wait()
-// 		close(results)
-// 	}()
+	// Process multiple files
+	results, errors := ProcessMultipleFiles(files, opts)
+	if len(errors) > 0 {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Some files failed to process",
+			"errors":  errors,
+		})
+	}
 
-// 	// Collect and process results
-// 	var errors []string
-// 	for result := range results {
-// 		if result.Error != nil {
-// 			errors = append(errors, fmt.Sprintf("%s: %v", result.Filename, result.Error))
-// 		}
-// 	}
+	// Collect the results for the response
+	var processedFiles []string
+	for _, result := range results {
+		processedFiles = append(processedFiles, result.Path)
+	}
 
-// 	if len(errors) > 0 {
-// 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-// 			"errors": errors,
-// 		})
-// 	}
+	return c.JSON(fiber.Map{
+		"message":        "Files processed succesfully",
+		"processedFiles": processedFiles,
+	})
+}
 
-// 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-// 		"message": "All files processed successfully",
-// 	})
-// }
-
-func processFile(file *multipart.FileHeader) FileProcessingResult {
+func ProcessFile(file *multipart.FileHeader) FileProcessingResult {
 
 	// Validate file for security
 	if err := ValidateUploadedFile(file); err != nil {
@@ -190,14 +188,18 @@ func processFile(file *multipart.FileHeader) FileProcessingResult {
 }
 
 // Validate and process multiple files (for bulk upload)
-// Validate and process multiple files (for bulk upload)
-func processMultipleFiles(files []*multipart.FileHeader) ([]FileProcessingResult, []ProcessingError) {
-	var results []FileProcessingResult
-	var errors []ProcessingError
+func ProcessMultipleFiles(files []*multipart.FileHeader, opts ProcessingOptions) ([]FileProcessingResult, []error) {
 
-	// Semaphore to limit concurrent file processing
-	semaphore := make(chan struct{}, MaxConcurrentProcessing)
-	var wg sync.WaitGroup
+	var (
+		results   []FileProcessingResult
+		errors    []error
+		wg        sync.WaitGroup
+		semaphore = make(chan struct{}, MaxConcurrentProcessing)
+	)
+
+	// Create channels for results
+	resultsChan := make(chan FileProcessingResult, len(files))
+	errorsChan := make(chan error, len(files))
 
 	// Iterate over all files and process them concurrently
 	for _, file := range files {
@@ -206,22 +208,34 @@ func processMultipleFiles(files []*multipart.FileHeader) ([]FileProcessingResult
 		go func(file *multipart.FileHeader) {
 			defer wg.Done()
 			// Acquire semaphore for concurrency control
-			semaphore <- struct{}{}
-			defer func() { <-semaphore }()
+			semaphore <- struct{}{}        // Acquire semaphore
+			defer func() { <-semaphore }() // Release semaphore
 
 			// Process the file
-			result := processFile(file)
-
+			result := ProcessFile(file)
 			if result.Error != nil {
-				errors = append(errors, *result.Error)
+				errorsChan <- result.Error
 			} else {
-				results = append(results, result)
+				resultsChan <- result
 			}
 		}(file)
 	}
 
-	// Wait for all goroutines to finish
-	wg.Wait()
+	go func() {
+		// Wait for all goroutines to finish
+		wg.Wait()
+		close(resultsChan)
+		close(errorsChan)
+	}()
+
+	// Collect results and errors
+	for result := range resultsChan {
+		results = append(results, result)
+	}
+
+	for err := range errorsChan {
+		errors = append(errors, err)
+	}
 
 	return results, errors
 }
@@ -230,6 +244,6 @@ func processMultipleFiles(files []*multipart.FileHeader) ([]FileProcessingResult
 func generateUniqueFileName(originalName string) string {
 	extension := filepath.Ext(originalName)
 	baseName := strings.TrimSuffix(originalName, extension)
-	timestamp := time.Now().Format("20060102150405")
+	timestamp := time.Now().Format("20060102150405") // -> Make random
 	return fmt.Sprintf("%s_%s%s", baseName, timestamp, extension)
 }
