@@ -10,6 +10,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
+// S3Client initializes an S3 client using the default AWS config.
 func S3Client() (*s3.Client, error) {
 
 	// Load .env file

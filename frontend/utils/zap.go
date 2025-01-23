@@ -6,6 +6,7 @@ import (
 
 var Logger *zap.Logger
 
+// InitLogger initialises the logger for the application. It returns an error if it fails.
 func InitLogger() error {
 	var err error
 	Logger, err = zap.NewProduction() //zap.NewDevelopment()   for prod

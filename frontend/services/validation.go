@@ -22,7 +22,7 @@ var AllowedFileExtensions = map[string]struct{}{
 	".png":  {},
 }
 
-// ValidateOrder checks if all required fields are present and valid
+// ValidateOrder validates a PhotoOrder instance, returning an error if required fields are missing.
 func ValidateOrder(order *utils.PhotoOrder) error {
 	if order == nil {
 		return errors.New("order cannot be nil")
@@ -60,6 +60,11 @@ func ValidateOrder(order *utils.PhotoOrder) error {
 	return nil
 }
 
+// ValidateUpload checks the upload constraints for the given files.
+// It validates the total request size against MaxTotalUploadSize,
+// the number of files against MaxFileCount, and each file's size
+// against MaxFileSize. If any of these validations fail, it returns
+// an appropriate error.
 func ValidateUpload(c *fiber.Ctx, files []*multipart.FileHeader) error {
 
 	// Check the total request size
@@ -82,7 +87,10 @@ func ValidateUpload(c *fiber.Ctx, files []*multipart.FileHeader) error {
 	return nil
 }
 
-// ValidateUploadedFile validates file name, extension and MIME type
+// ValidateUploadedFile checks the validity of a given file based on its
+// extension and MIME type. It ensures the file has a permitted extension
+// (JPG or PNG) and that its MIME type is an image type. If any validation
+// fails, it returns an error detailing the issue.
 func ValidateUploadedFile(file *multipart.FileHeader) error {
 	// Extract file extension
 	extension := strings.ToLower(filepath.Ext(file.Filename))
@@ -115,7 +123,9 @@ func ValidateUploadedFile(file *multipart.FileHeader) error {
 }
 
 func (p *ImageProcessor) ValidateAndProcessImage(imgData []byte, opts ProcessingOptions) (image.Image, error) {
-
+	// ValidateAndProcessImage validates the size and decodes the given image data, and if the image is above the target size, it
+	// resizes the image to meet the target size. If the image is below the target size, it is returned as is. The function
+	// returns the processed image and any error that occurred during processing.
 	// We must validate the file size first
 	fileSize := int64(len(imgData))
 
