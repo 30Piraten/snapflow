@@ -31,6 +31,9 @@ type PresignedURLResponse struct {
 	Fields  map[string]string `json:"fields,omitempty"`
 }
 
+// GeneratePresignedURL generates a presigned URL for the given order details.
+// The generated presigned URL is valid for 15 minutes.
+// The generated presigned URL will contain the defined metadata
 func GeneratePresignedURL(order *PhotoOrder) (*PresignedURLResponse, error) {
 
 	err := godotenv.Load()

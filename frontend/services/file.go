@@ -76,6 +76,14 @@ func ProcessUploadedFiles(c *fiber.Ctx) error {
 	})
 }
 
+// ProcessFile validates and processes a single file. It takes a multipart.FileHeader
+// and options for image processing. It first validates the file for security, then
+// opens the file and reads its data. Afterwards it checks if the file is above the target
+// size and if so, it resizes the image to the target size. The processed image is
+// then saved to the uploads directory with a unique filename. It returns a
+// FileProcessingResult containing the path of the saved image, the filename and
+// size of the original file. If an error occurs during processing, it returns a
+// ProcessingError with the appropriate code and message.
 func ProcessFile(file *multipart.FileHeader, opts ProcessingOptions) FileProcessingResult {
 
 	// Validate file for security
@@ -182,7 +190,20 @@ func ProcessFile(file *multipart.FileHeader, opts ProcessingOptions) FileProcess
 	}
 }
 
-// Validate and process multiple files (for bulk upload)
+// ProcessMultipleFiles processes multiple files concurrently and returns the results
+// and any errors encountered while processing the files.
+//
+// The function will process the files in chunks of MaxConcurrentProcessing, so if
+// you have 10 files and MaxConcurrentProcessing is 3, the function will process
+// 3 files at a time until all files are processed.
+//
+// The function returns two channels, one for the results and one for any errors
+// encountered while processing the files. The results channel will contain all
+// the results of the processed files, and the errors channel will contain all the
+// errors encountered while processing the files.
+//
+// The function will block until all files have been processed and the results and
+// errors have been collected.
 func ProcessMultipleFiles(files []*multipart.FileHeader, opts ProcessingOptions) ([]FileProcessingResult, []error) {
 
 	var (
@@ -235,7 +256,8 @@ func ProcessMultipleFiles(files []*multipart.FileHeader, opts ProcessingOptions)
 	return results, errors
 }
 
-// Helper function to generate unique filename
+// generateUniqueFileName generates a unique filename by appending a timestamp
+// to the base name of the original file name.
 func generateUniqueFileName(originalName string) string {
 	extension := filepath.Ext(originalName)
 	baseName := strings.TrimSuffix(originalName, extension)

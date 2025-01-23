@@ -15,7 +15,8 @@ import (
 	"go.uber.org/zap"
 )
 
-// NewImageProcessor creates a new processor instance
+// NewImageProcessor creates a new instance of ImageProcessor with the provided logger.
+// The logger is used for logging messages, and a new cache is initialized for caching processed images.
 func NewImageProcessor(logger *zap.Logger) *ImageProcessor {
 	return &ImageProcessor{
 		logger: logger,
@@ -23,6 +24,11 @@ func NewImageProcessor(logger *zap.Logger) *ImageProcessor {
 	}
 }
 
+// ProcessImageWithSizeTarget takes an original image and processes it to meet the target size specified in
+// the ProcessingOptions. If the original image is already below the target size, it is returned as is.
+// Otherwise, the image is resized to the target size and then encoded with a quality that is reduced
+// incrementally until the target size is met. The final quality of the image is returned in the
+// ProcessingOptions struct.
 func (p *ImageProcessor) ProcessImageWithSizeTarget(originalImage image.Image, opts ProcessingOptions) (image.Image, error) {
 
 	var buf bytes.Buffer
@@ -96,7 +102,9 @@ func (p *ImageProcessor) ProcessImageWithSizeTarget(originalImage image.Image, o
 	return img, nil
 }
 
-// SaveImage saves the processed image with appropriate format and quality
+// SaveImage saves the given image to the specified file path using the format and quality
+// options provided in ProcessingOptions. The function supports JPEG and PNG formats.
+// An error is returned if the file cannot be created or if the image format is unsupported.
 func (p *ImageProcessor) SaveImage(img image.Image, path string, opts ProcessingOptions) error {
 
 	file, err := os.Create(path)

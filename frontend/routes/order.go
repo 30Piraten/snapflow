@@ -7,7 +7,10 @@ import (
 	"go.uber.org/zap"
 )
 
-// HandleOrderSubmission processes the order form submission
+// HandleOrderSubmission is the main entry point for the order submission process.
+// It will parse order details, generate a presigned URL, process uploaded files
+// and return a successful response containing the order details, presigned URL
+// and order ID.
 func HandleOrderSubmission(c *fiber.Ctx) error {
 	utils.Logger.Info("Starting order submission processing")
 
@@ -38,7 +41,9 @@ func HandleOrderSubmission(c *fiber.Ctx) error {
 	})
 }
 
-// parseOrderDetails extracts and validates order information from the request
+// parseOrderDetails parses the order details from the request body and validates
+// the required fields. If the parsing or validation fails, it returns an error.
+// If the parsing and validation succeed, it returns the parsed order details.
 func parseOrderDetails(c *fiber.Ctx) (*utils.PhotoOrder, error) {
 	order := new(utils.PhotoOrder)
 	if err := c.BodyParser(order); err != nil {
