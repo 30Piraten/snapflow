@@ -76,7 +76,7 @@ func ProcessUploadedFiles(c *fiber.Ctx) error {
 	})
 }
 
-func ProcessFile(file *multipart.FileHeader) FileProcessingResult {
+func ProcessFile(file *multipart.FileHeader, opts ProcessingOptions) FileProcessingResult {
 
 	// Validate file for security
 	if err := ValidateUploadedFile(file); err != nil {
@@ -116,11 +116,6 @@ func ProcessFile(file *multipart.FileHeader) FileProcessingResult {
 
 	// Initialise processor
 	processor := NewImageProcessor(utils.Logger)
-	opts := ProcessingOptions{
-		Quality:         HighQuality,
-		TargetSizeBytes: TargetFileSize,
-		Format:          "jpeg",
-	}
 
 	// If file exceeds 50MB, reject it
 	if file.Size > MaxFileSize {
@@ -212,7 +207,7 @@ func ProcessMultipleFiles(files []*multipart.FileHeader, opts ProcessingOptions)
 			defer func() { <-semaphore }() // Release semaphore
 
 			// Process the file
-			result := ProcessFile(file)
+			result := ProcessFile(file, opts)
 			if result.Error != nil {
 				errorsChan <- result.Error
 			} else {
