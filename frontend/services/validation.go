@@ -50,7 +50,7 @@ func ValidateOrder(order *utils.PhotoOrder) error {
 		return fmt.Errorf("missing required fields: %s", strings.Join(missingFields, ", "))
 	}
 
-	// Advanced email validation using regex
+	// Email validation using regex
 	emailRegex := `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
 	re := regexp.MustCompile(emailRegex)
 	if !re.MatchString(order.Email) {
