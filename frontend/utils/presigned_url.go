@@ -46,7 +46,7 @@ func GeneratePresignedURL(order *PhotoOrder) (*PresignedURLResponse, error) {
 	}
 
 	orderID := uuid.New().String()
-	s3key := fmt.Sprintf("%s", orderID)
+	s3key := fmt.Sprintf("%s/%s", order.FullName, orderID)
 
 	s3Client, err := cfg.S3Client()
 	if err != nil {
@@ -61,6 +61,7 @@ func GeneratePresignedURL(order *PhotoOrder) (*PresignedURLResponse, error) {
 		&s3.PutObjectInput{
 			Bucket: aws.String(bucketName),
 			Key:    aws.String(s3key),
+			// ACL:    aws.String("private"),
 			Metadata: map[string]string{
 				"full_name":  order.FullName,
 				"location":   order.Location,
