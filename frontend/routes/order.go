@@ -59,8 +59,8 @@ func HandleOrderSubmission(c *fiber.Ctx) error {
 
 	// Process uploaded photos
 	if err := svc.ProcessUploadedFiles(c); err != nil {
-		// Return an error response if the file processing failes
-		utils.Logger.Error("File validation/processing failed", zap.Error(err))
+		// // Return an error response if the file processing failes
+		// utils.Logger.Error("File validation/processing failed", zap.Error(err))
 		return utils.HandleError(c, fiber.StatusBadRequest, "Failed to process files", err)
 	}
 
