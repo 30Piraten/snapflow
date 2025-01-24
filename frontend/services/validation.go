@@ -95,17 +95,8 @@ func (p *ImageProcessor) ValidateAndProcessImage(imgData []byte, opts Processing
 		return nil, fmt.Errorf("failed to decode image: %w", err)
 	}
 
-	// Check if the file extension is allowed
-	var extension string
-	switch format {
-	case "jpeg":
-		extension = ".jpg" // Treat "jpeg" as ".jpg"
-	case "png":
-		extension = ".png"
-	default:
-		extension = "." + format // Unrecognized format
-	}
-
+	// Validate file extension (format to extension mapping is assumed here)
+	extension := fmt.Sprintf(".%s", format)
 	if _, allowed := AllowedFileExtensions[extension]; !allowed {
 		return nil, fmt.Errorf("invalid file type: %s, only JPG and PNG are allowed", extension)
 	}
