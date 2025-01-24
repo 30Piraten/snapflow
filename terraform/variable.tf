@@ -22,13 +22,13 @@ variable "enable_key_rotation" {
 
 variable "deletion_window_in_days" {
   type    = number
-  default = 5
+  default = 7
 }
 
 # DYNAMODB BUCKET DEFINITION
 variable "dynamodb_name" {
   type    = string
-  default = "SnapFlowTable"
+  default = "CustomerTable"
 }
 
 variable "billing_mode" {
