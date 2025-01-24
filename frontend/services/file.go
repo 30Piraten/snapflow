@@ -20,13 +20,10 @@ func (e *ProcessingError) Error() string {
 
 // ProcessUploadedFiles parses the uploaded files and processes them accordingly.
 // If there is a single file, it is processed and a JSON response is returned
-// containing the file path.
-// If there are multiple files, they are processed concurrently and a JSON
-// response is returned containing the paths of the processed files. If there
-// were any errors while processing the files, they are collected and returned
-// in the response as well.
-// The function returns an error if there were any issues while processing the
-// files.
+// containing the file path. If there are multiple files, they are processed
+// concurrently and a JSON response is returned containing the paths of the processed
+// files. If there were any errors while processing the files, they are collected and returned
+// in the response as well. The function returns an error if there were any issues while processing the files.
 func ProcessUploadedFiles(c *fiber.Ctx) error {
 
 	// Parse the uploaded files
@@ -65,10 +62,6 @@ func ProcessUploadedFiles(c *fiber.Ctx) error {
 		if err := handleSingleFile(c, files[0], opts); err != nil {
 			return fmt.Errorf("failed to process file %s: %w", files[0].Filename, err)
 		}
-		// if err != nil {
-		// 	// Stop further execution on validation failure
-		// 	return err
-		// }
 		return nil
 	}
 
@@ -122,8 +115,8 @@ func handleSingleFile(c *fiber.Ctx, file *multipart.FileHeader, opts ProcessingO
 
 	// Validate the file before processing
 	processor := NewImageProcessor(utils.Logger)
-	_, err = processor.ValidateAndProcessImage(fileData, opts)
-	if err != nil {
+	if _, err = processor.ValidateAndProcessImage(fileData, opts); err != nil {
+		// utils.Logger.Error("File validation failed", zap.Error(err))
 		return utils.HandleError(c, fiber.StatusBadRequest, "File validation failed", err)
 	}
 
@@ -186,6 +179,7 @@ func ProcessFile(file *multipart.FileHeader, opts ProcessingOptions) FileProcess
 		}
 	}
 
+	// Save photos to s3 bucket here
 	// Save the processed image
 	outputPath := fmt.Sprintf("./%s/%s", ProcessedImageDir, generateUniqueFileName(file.Filename))
 	if err := processor.SaveImage(processedImage, outputPath, opts); err != nil {
