@@ -2,7 +2,6 @@ package services
 
 import (
 	"fmt"
-	"image"
 	"io"
 	"mime/multipart"
 	"path/filepath"
@@ -29,60 +28,114 @@ func (e *ProcessingError) Error() string {
 // The function returns an error if there were any issues while processing the
 // files.
 func ProcessUploadedFiles(c *fiber.Ctx) error {
+
 	// Parse the uploaded files
 	form, err := c.MultipartForm()
 	if err != nil {
-		return utils.HandleError(c, fiber.StatusBadGateway, "Failed to parse multipart form", err)
+		// return utils.HandleError(c, fiber.StatusBadGateway, "Failed to parse multipart form", err)
+		return fmt.Errorf("failed to parse multipart form: %w", err)
 	}
 
 	files := form.File["photos"]
 	if len(files) == 0 {
-		return utils.HandleError(c, fiber.StatusBadRequest, "No files uploaded", nil)
+		// return utils.HandleError(c, fiber.StatusBadRequest, "No files uploaded", nil)
+		return fmt.Errorf("no files uploaded")
 	}
 
-	// Confirm whether its a single file or multiple files
+	// Validate total file count
+	if len(files) > MaxFileCount {
+		// return utils.HandleError(c, fiber.StatusBadRequest, fmt.Sprintf("Too many files uploaded. Maximum allowed is %d", MaxFileCount), nil)
+		return fmt.Errorf("Too many files uploaded. Maximum allowed is %d", MaxFileCount)
+	}
+
+	// Process single or multiple files
 	opts := ProcessingOptions{
 		Quality:         HighQuality,
 		TargetSizeBytes: TargetFileSize,
 		Format:          "jpeg",
+		MaxDimensions: Dimensions{
+			// Need to review: TODO
+			Width:  5000,
+			Height: 5000,
+		},
 	}
 
-	// Process single file
+	// Handle single file
 	if len(files) == 1 {
-		result := ProcessFile(files[0], opts)
-		if result.Error != nil {
-			// return utils.HandleError(c, fiber.StatusInternalServerError, "Failed to process file", result.Error)
-			return &ProcessingError{
-				Type:    "Validation",
-				Code:    ErrCodeProcessingFailed,
-				Message: "Failed to process file",
-			}
+		if err := handleSingleFile(c, files[0], opts); err != nil {
+			return fmt.Errorf("failed to process file %s: %w", files[0].Filename, err)
 		}
-
-		return c.JSON(fiber.Map{
-			"message":  "File processed successfully",
-			"filePath": result.Path,
-		})
+		// if err != nil {
+		// 	// Stop further execution on validation failure
+		// 	return err
+		// }
+		return nil
 	}
 
-	// Process multiple files
-	results, errors := ProcessMultipleFiles(files, opts)
+	// Validate and handle multiple files
+	_, errors := ProcessMultipleFiles(files, opts) // results should be added here
+	// If there are errors, return the first one
 	if len(errors) > 0 {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": "Some files failed to process",
-			"errors":  errors,
-		})
+		// Collect all errors into one
+		var errMsg []string
+		for _, e := range errors {
+			errMsg = append(errMsg, e.Error())
+		}
+		// return utils.HandleError(c, fiber.StatusInternalServerError, "Some files failed to process", errors[0])
+		return fmt.Errorf("one or more files failed processing: %s", strings.Join(errMsg, "; "))
 	}
 
-	// Collect the results for the response
-	var processedFiles []string
-	for _, result := range results {
-		processedFiles = append(processedFiles, result.Path)
+	// // Prepare the response for successfully processed files
+	// var filePaths []string
+	// for _, result := range results {
+	// 	filePaths = append(filePaths, result.Path)
+	// }
+
+	// return c.JSON(fiber.Map{
+	// 	"message":   "Files processed succesfully",
+	// 	"filePaths": filePaths,
+	// })
+
+	return nil
+}
+
+// handleSingleFile validates and processes a single file. It first validates the
+// file using the provided ProcessingOptions, and if the validation fails, it
+// returns a 400 Bad Request error. If the validation succeeds, it processes the
+// file and returns a JSON response with the path of the processed file if
+// successful. If there are any errors during processing, it returns a 500 Internal
+// Server Error with the error message.
+func handleSingleFile(c *fiber.Ctx, file *multipart.FileHeader, opts ProcessingOptions) error {
+
+	// Open the file
+	source, err := file.Open()
+	if err != nil {
+		return utils.HandleError(c, fiber.StatusInternalServerError, "Failed to open file", err)
+	}
+	defer source.Close()
+
+	// Read the file data into a byte slice
+	fileData, err := io.ReadAll(source)
+	if err != nil {
+		return utils.HandleError(c, fiber.StatusInternalServerError, "Failed to read file data", err)
+	}
+
+	// Validate the file before processing
+	processor := NewImageProcessor(utils.Logger)
+	_, err = processor.ValidateAndProcessImage(fileData, opts)
+	if err != nil {
+		return utils.HandleError(c, fiber.StatusBadRequest, "File validation failed", err)
+	}
+
+	// Process the file
+	result := ProcessFile(file, opts)
+	if result.Error != nil {
+		return utils.HandleError(c, fiber.StatusInternalServerError, "Failed to process file", result.Error)
 	}
 
 	return c.JSON(fiber.Map{
-		"message":        "Files processed succesfully",
-		"processedFiles": processedFiles,
+		"message":  "File processed successfully",
+		"filePath": result.Path,
 	})
 }
 
@@ -95,18 +148,6 @@ func ProcessUploadedFiles(c *fiber.Ctx) error {
 // size of the original file. If an error occurs during processing, it returns a
 // ProcessingError with the appropriate code and message.
 func ProcessFile(file *multipart.FileHeader, opts ProcessingOptions) FileProcessingResult {
-
-	// Validate file for security
-	if err := ValidateUploadedFile(file); err != nil {
-		return FileProcessingResult{
-			Error: &ProcessingError{
-				Type:    "Validation",
-				Code:    ErrCodeInvalidFormat,
-				Message: err.Error(),
-			},
-		}
-	}
-
 	// Open the file
 	source, err := file.Open()
 	if err != nil {
@@ -114,14 +155,14 @@ func ProcessFile(file *multipart.FileHeader, opts ProcessingOptions) FileProcess
 			Error: &ProcessingError{
 				Type:    "FileError",
 				Code:    ErrCodeFileOpen,
-				Message: fmt.Sprintf("failed to open the file: %v", err),
+				Message: fmt.Sprintf("failed to open file: %v", err),
 			},
 		}
 	}
 	defer source.Close()
 
 	// Read file data
-	img, err := io.ReadAll(source)
+	imgData, err := io.ReadAll(source)
 	if err != nil {
 		return FileProcessingResult{
 			Error: &ProcessingError{
@@ -132,56 +173,20 @@ func ProcessFile(file *multipart.FileHeader, opts ProcessingOptions) FileProcess
 		}
 	}
 
-	// Initialise processor
+	// Validate and process the image
 	processor := NewImageProcessor(utils.Logger)
-
-	// If file exceeds 50MB, reject it
-	if file.Size > MaxFileSize {
+	processedImage, err := processor.ValidateAndProcessImage(imgData, opts)
+	if err != nil {
 		return FileProcessingResult{
 			Error: &ProcessingError{
-				Type:    "Processing",
-				Code:    ErrCodeFileTooLarge,
-				Message: fmt.Sprintf("file size exceeds the 50MB limit: %v bytes", file.Size),
+				Type:    "Validation",
+				Code:    ErrCodeProcessingFailed,
+				Message: fmt.Sprintf("validation or processing failed: %v", err),
 			},
 		}
 	}
 
-	var processedImage image.Image
-	// If the file is large (1MB - 50MB), we resize it to <1MB with strict setting
-	if file.Size > TargetFileSize && file.Size <= MaxFileSize {
-		opts.TargetSizeBytes = TargetFileSize
-		// Process the image with size validation
-		processedImage, err = processor.ValidateAndProcessImage(img, opts)
-		if err != nil {
-			return FileProcessingResult{
-				Error: &ProcessingError{
-					Type:    "Processing",
-					Code:    ErrCodeProcessingFailed,
-					Message: fmt.Sprintf("file to process image: %v", err),
-				},
-			}
-		}
-
-	} else {
-		// If the file is already under 1MB, there's no need to resize
-		processedImage, err = processor.ValidateAndProcessImage(img, opts)
-		if err != nil {
-			return FileProcessingResult{
-				Error: &ProcessingError{
-					Type:    "Processing",
-					Code:    ErrCodeProcessingFailed,
-					Message: fmt.Sprintf("failed to process image: %v", err),
-				},
-			}
-		}
-	}
-
-	// Since most photos are often uploaded with the same camera name
-	// Lets generate a unique filename to avoid collisions
-	// filename := generateUniqueFileName(file.Filename)
-	// outputPath := filepath.Join("./uploads", filename)
-
-	// Then we save the processed image with a unique name
+	// Save the processed image
 	outputPath := fmt.Sprintf("./%s/%s", ProcessedImageDir, generateUniqueFileName(file.Filename))
 	if err := processor.SaveImage(processedImage, outputPath, opts); err != nil {
 		return FileProcessingResult{
@@ -200,20 +205,13 @@ func ProcessFile(file *multipart.FileHeader, opts ProcessingOptions) FileProcess
 	}
 }
 
-// ProcessMultipleFiles processes multiple files concurrently and returns the results
-// and any errors encountered while processing the files.
-//
-// The function will process the files in chunks of MaxConcurrentProcessing, so if
-// you have 10 files and MaxConcurrentProcessing is 3, the function will process
-// 3 files at a time until all files are processed.
-//
-// The function returns two channels, one for the results and one for any errors
-// encountered while processing the files. The results channel will contain all
-// the results of the processed files, and the errors channel will contain all the
-// errors encountered while processing the files.
-//
-// The function will block until all files have been processed and the results and
-// errors have been collected.
+// ProcessMultipleFiles processes multiple uploaded files concurrently using the given
+// processing options. It first validates all files and returns any validation errors
+// upfront. If all files are valid, they are processed concurrently with a limit on
+// the number of concurrent operations. The function returns a slice of
+// FileProcessingResult for each successfully processed file and a slice of errors
+// for any failed processing attempts. The results and errors are collected and
+// returned once all processing is complete.
 func ProcessMultipleFiles(files []*multipart.FileHeader, opts ProcessingOptions) ([]FileProcessingResult, []error) {
 
 	var (
@@ -223,21 +221,45 @@ func ProcessMultipleFiles(files []*multipart.FileHeader, opts ProcessingOptions)
 		semaphore = make(chan struct{}, MaxConcurrentProcessing)
 	)
 
-	// Create channels for results
+	processor := NewImageProcessor(utils.Logger)
+
+	// Validate all files upfront
+	for _, file := range files {
+		source, err := file.Open()
+		if err != nil {
+			errors = append(errors, fmt.Errorf("failed to open file %s: %v", file.Filename, err))
+			continue
+		}
+
+		fileData, err := io.ReadAll(source)
+		source.Close() // close the file after reading
+		if err != nil {
+			errors = append(errors, fmt.Errorf("failed to read the file %s: %v", file.Filename, err))
+			continue
+		}
+
+		if _, err := processor.ValidateAndProcessImage(fileData, opts); err != nil {
+			errors = append(errors, fmt.Errorf("file %s failed validation: %v", file.Filename, err))
+		}
+	}
+
+	// Short-circuit if there are validation errors
+	if len(errors) > 0 {
+		return nil, errors
+	}
+
+	// Concurrent processing of validated files
 	resultsChan := make(chan FileProcessingResult, len(files))
 	errorsChan := make(chan error, len(files))
 
-	// Iterate over all files and process them concurrently
 	for _, file := range files {
 		wg.Add(1)
 
 		go func(file *multipart.FileHeader) {
 			defer wg.Done()
-			// Acquire semaphore for concurrency control
-			semaphore <- struct{}{}        // Acquire semaphore
-			defer func() { <-semaphore }() // Release semaphore
+			semaphore <- struct{}{}
+			defer func() { <-semaphore }()
 
-			// Process the file
 			result := ProcessFile(file, opts)
 			if result.Error != nil {
 				errorsChan <- result.Error
@@ -247,14 +269,13 @@ func ProcessMultipleFiles(files []*multipart.FileHeader, opts ProcessingOptions)
 		}(file)
 	}
 
+	// Collect results and errors
 	go func() {
-		// Wait for all goroutines to finish
 		wg.Wait()
 		close(resultsChan)
 		close(errorsChan)
 	}()
 
-	// Collect results and errors
 	for result := range resultsChan {
 		results = append(results, result)
 	}

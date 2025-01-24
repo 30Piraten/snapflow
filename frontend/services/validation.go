@@ -5,9 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"image"
-	"mime/multipart"
 	"net/http"
-	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -80,97 +78,68 @@ func ValidateOrder(c *fiber.Ctx, order *utils.PhotoOrder) error {
 	return nil
 }
 
-// ValidateUpload checks the upload constraints for the given files.
-// It validates the total request size against MaxTotalUploadSize,
-// the number of files against MaxFileCount, and each file's size
-// against MaxFileSize. If any of these validations fail, it returns
-// an appropriate error.
-func ValidateUpload(c *fiber.Ctx, files []*multipart.FileHeader) error {
-
-	// Check the total request size
-	if c.Request().Header.ContentLength() > MaxTotalUploadSize {
-		return fmt.Errorf("total upload size exceeds %d bytes", MaxTotalUploadSize)
-	}
-
-	// Validate file count
-	if len(files) > MaxFileCount {
-		return fmt.Errorf("too many files upload, max allowed is %d", MaxFileCount)
-	}
-
-	// Validate each file size
-	for _, file := range files {
-		if file.Size > MaxFileSize {
-			return fmt.Errorf("file %s exceeds max size of %d bytes", file.Filename, MaxFileSize)
-		}
-	}
-
-	return nil
-}
-
-// ValidateUploadedFile checks the validity of a given file based on its
-// extension and MIME type. It ensures the file has a permitted extension
-// (JPG or PNG) and that its MIME type is an image type. If any validation
-// fails, it returns an error detailing the issue.
-func ValidateUploadedFile(file *multipart.FileHeader) error {
-	// Extract file extension
-	extension := strings.ToLower(filepath.Ext(file.Filename))
-
-	// Validate file extension
-	if _, allowed := AllowedFileExtensions[extension]; !allowed {
-		return fmt.Errorf("invalid file type: %s, only JPG and PNG are allowed", extension)
-	}
-
-	// Open the file to check its MIME type
-	src, err := file.Open()
-	if err != nil {
-		return fmt.Errorf("failed to open file for validation: %w", err)
-	}
-	defer src.Close()
-
-	// Buffer the first 512 bytes for MIME type detection
-	buffer := make([]byte, 512)
-	if _, err := src.Read(buffer); err != nil {
-		return fmt.Errorf("failed to read file for MIME type validation: %w", err)
-	}
-
-	// Check MIME type
-	mimeType := http.DetectContentType(buffer)
-	if !strings.HasPrefix(mimeType, "image/") {
-		return fmt.Errorf("invalid file type detected: %s", mimeType)
-	}
-
-	return nil
-}
-
+// ValidateAndProcessImage validates and processes an image. It checks the file size, decodes the image, ensures the file
+// extension is allowed, validates the MIME type, and enforces maximum dimensions. If the file size exceeds the target
+// size, it resizes the image to meet the target size. The processed image is returned, or an error is returned if any
+// validation or processing fails.
 func (p *ImageProcessor) ValidateAndProcessImage(imgData []byte, opts ProcessingOptions) (image.Image, error) {
-	// ValidateAndProcessImage validates the size and decodes the given image data, and if the image is above the target size, it
-	// resizes the image to meet the target size. If the image is below the target size, it is returned as is. The function
-	// returns the processed image and any error that occurred during processing.
-	// We must validate the file size first
+	// Validate file size
 	fileSize := int64(len(imgData))
-
-	// Reject single file > 50MB
 	if fileSize > MaxFileSize {
-		return nil, fmt.Errorf("file szie %d bytes exceeds maximum allowed szie of %d bytes", fileSize, MaxFileSize)
+		return nil, fmt.Errorf("file size %d bytes exceeds maximum allowed size of %d bytes", fileSize, MaxFileSize)
 	}
 
-	// Next we securely decode the image
+	// Decode the image securely
 	img, format, err := image.Decode(bytes.NewReader(imgData))
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode image: %w", err)
 	}
 
-	// And set the format of the image if it's not specified
+	// Check if the file extension is allowed
+	var extension string
+	switch format {
+	case "jpeg":
+		extension = ".jpg" // Treat "jpeg" as ".jpg"
+	case "png":
+		extension = ".png"
+	default:
+		extension = "." + format // Unrecognized format
+	}
+
+	if _, allowed := AllowedFileExtensions[extension]; !allowed {
+		return nil, fmt.Errorf("invalid file type: %s, only JPG and PNG are allowed", extension)
+	}
+
+	// Validate MIME type using the first 512 bytes
+	buffer := bytes.NewReader(imgData)
+	header := make([]byte, 512)
+	if _, err := buffer.Read(header); err != nil {
+		return nil, fmt.Errorf("failed to read file data for MIME type validation: %w", err)
+	}
+	mimeType := http.DetectContentType(header)
+	if !strings.HasPrefix(mimeType, "image/") {
+		return nil, fmt.Errorf("invalid file type detected: %s", mimeType)
+	}
+
+	// Enforce maximum dimensions to prevent resource exhaustion
+	maxWidth, maxHeight := opts.MaxDimensions.Width, opts.MaxDimensions.Height
+	if maxWidth > 0 && maxHeight > 0 {
+		if img.Bounds().Dx() > maxWidth || img.Bounds().Dy() > maxHeight {
+			return nil, fmt.Errorf("image dimensions exceed maximum allowed size of %dx%d pixels", maxWidth, maxHeight)
+		}
+	}
+
+	// Set the format if not already specified
 	if opts.Format == "" {
 		opts.Format = format
 	}
 
-	// Next, if the file is between 1MB and 50MB, resize
+	// Resize the image if the file size exceeds the target size
 	if fileSize > TargetFileSize {
 		opts.TargetSizeBytes = TargetFileSize
 		return p.ProcessImageWithSizeTarget(img, opts)
 	}
 
-	// Accept file <=1MB without resizing
+	// Accept the image without resizing if <= TargetFileSize
 	return img, nil
 }

@@ -37,6 +37,12 @@ type ProcessingOptions struct {
 	PreserveMetadata bool
 	OptimiseSizeOnly bool
 	TargetSizeBytes  int64 // -> New field for target file size
+	MaxDimensions    Dimensions
+}
+
+type Dimensions struct {
+	Width  int
+	Height int
 }
 
 // ImageProcessor handles all image processing operations

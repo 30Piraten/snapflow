@@ -23,7 +23,7 @@ func HandleOrderSubmission(c *fiber.Ctx) error {
 		log.Fatal("Failed to load .env file")
 	}
 
-	// trustedOrigin defines the trsuted frontend domain
+	// trustedOrigin defines the trusted frontend domain
 	trustedOrigin := os.Getenv("TRUSTED_ORIGIN")
 
 	// Get the Referer and Origin headers
@@ -51,13 +51,17 @@ func HandleOrderSubmission(c *fiber.Ctx) error {
 	// Generate presigned URL
 	presignedResponse, err := utils.GeneratePresignedURL(order)
 	if err != nil {
-		return utils.HandleError(c, fiber.StatusInternalServerError, "Failed to generate presigned URL", err)
+		return utils.HandleError(c, fiber.StatusInternalServerError, "File validation or processing failed", err)
 	}
 
-	// Process uploaded photos -> TODO
-	err = svc.ProcessUploadedFiles(c)
-	if err != nil {
-		return utils.HandleError(c, fiber.StatusInternalServerError, "Failed to process files", err)
+	// Log the generated presigned URL for debugging
+	// utils.Logger.Info("Generated Presigned URL:", zap.String("URL", presignedResponse.URL))x
+
+	// Process uploaded photos
+	if err := svc.ProcessUploadedFiles(c); err != nil {
+		// Return an error response if the file processing failes
+		utils.Logger.Error("File validation/processing failed", zap.Error(err))
+		return utils.HandleError(c, fiber.StatusBadRequest, "Failed to process files", err)
 	}
 
 	// Return a successful response

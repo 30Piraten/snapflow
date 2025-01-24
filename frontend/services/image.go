@@ -92,6 +92,9 @@ func (p *ImageProcessor) ProcessImageWithSizeTarget(originalImage image.Image, o
 
 		// Reduce quality and retry
 		opts.Quality -= QualityStep
+
+		// Display finalSize to terminal
+		// utils.Logger.Info("final_size:", zap.String("final_size", fmt.Sprintf("%d", finalSize)))
 	}
 
 	img, _, err := image.Decode(&buf)
