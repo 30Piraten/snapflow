@@ -26,7 +26,7 @@ func InitDynamoDB() {
 }
 
 // InsertMetadata inserts metadata for a new photo upload.
-func InsertMetadata(customerEmail, photoID string, timestamp int64) error {
+func InsertMetadata(customerFullName, customerEmail, photoID string, timestamp int64) error {
 	ok := godotenv.Load()
 	if ok != nil {
 		log.Fatal("failed to load .env file")
@@ -37,6 +37,9 @@ func InsertMetadata(customerEmail, photoID string, timestamp int64) error {
 	_, err := dynamoClient.PutItem(context.Background(), &dynamodb.PutItemInput{
 		TableName: aws.String(tableName),
 		Item: map[string]types.AttributeValue{
+			"customer_fullname": &types.AttributeValueMemberS{
+				Value: customerFullName,
+			},
 			"customer_email": &types.AttributeValueMemberS{
 				Value: customerEmail,
 			},

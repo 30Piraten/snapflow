@@ -53,7 +53,7 @@ func GeneratePresignedURL(order *PhotoOrder) (*PresignedURLResponse, error) {
 	uploadTimestamp := time.Now().Unix()
 
 	// Insert metadata into DynamoDB
-	err = cfg.InsertMetadata(order.Email, orderID, uploadTimestamp)
+	err = cfg.InsertMetadata(order.FullName, order.Email, orderID, uploadTimestamp)
 	if err != nil {
 		return nil, fmt.Errorf("failed to insert metadata into DynamoDB: %v", err)
 	}
@@ -64,7 +64,7 @@ func GeneratePresignedURL(order *PhotoOrder) (*PresignedURLResponse, error) {
 		return nil, fmt.Errorf("failed to initialize s3 client: %v", err)
 	}
 
-	// Get bucket name from .env
+	// Get bucket name from .envs
 	bucketName := os.Getenv("BUCKET_NAME")
 
 	presignedClient := s3.NewPresignClient(s3Client)

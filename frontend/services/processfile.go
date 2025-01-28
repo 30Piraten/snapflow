@@ -84,6 +84,8 @@ func ProcessFile(file *multipart.FileHeader, opts ProcessingOptions) FileProcess
 		log.Fatalf("Failed to load AWS config: %v", err)
 	}
 
+	// TODO
+	// var order utils.PhotoOrder
 	s3Client := s3.NewFromConfig(config)
 
 	// Here we generate a unique file path in S3
