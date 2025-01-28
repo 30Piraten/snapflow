@@ -34,7 +34,7 @@ resource "aws_dynamodb_table" "customer_data_table" {
   }
 
   attribute {
-    name = "processed_s3_location"
+    name = "processed_location"
     type = "S"
   }
 
@@ -51,6 +51,24 @@ resource "aws_dynamodb_table" "customer_data_table" {
   global_secondary_index {
     name = "PhotoStatusIndex"
     hash_key = "photo_status"
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    name = "CustomerEmailIndex"
+    hash_key = "customer_email"
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    name = "CustomerNameIndex"
+    hash_key = "customer_name"
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    name = "ProcessedLocationIndex"
+    hash_key = "processed_location"
     projection_type = "ALL"
   }
 
