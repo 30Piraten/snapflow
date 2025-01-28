@@ -12,7 +12,7 @@ variable "force_destroy" {
 
 variable "bucket_name" {
   type    = string
-  default = "snapflowbucket"
+  default = "snaps3flowbucket011"
 }
 
 variable "enable_key_rotation" {
