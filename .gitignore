@@ -1,3 +1,7 @@
 frontend/extras
 
 frontend/.env
+
+*.tfstate
+*.tfstate.backup
+.terraform
