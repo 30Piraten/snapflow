@@ -17,7 +17,7 @@ var (
 	dynamoClient *dynamodb.Client
 )
 
-func Init() {
+func InitDynamoDB() {
 	cfg, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
 		log.Fatal("failed to load configuration, ", err)
