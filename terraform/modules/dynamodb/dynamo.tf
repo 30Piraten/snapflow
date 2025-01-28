@@ -19,6 +19,11 @@ resource "aws_dynamodb_table" "customer_data_table" {
 
   # Define attributes
   attribute {
+    name = "customer_name"
+    type = "S"
+  }
+
+  attribute {
     name = "customer_email"
     type = "S"
   }
