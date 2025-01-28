@@ -36,6 +36,9 @@ type PresignedURLResponse struct {
 // The generated presigned URL will contain the defined metadata
 func GeneratePresignedURL(order *PhotoOrder) (*PresignedURLResponse, error) {
 
+	// Initialize DyanmoDB client
+	cfg.InitDynamoDB()
+
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("failed to load .env file")
@@ -47,7 +50,15 @@ func GeneratePresignedURL(order *PhotoOrder) (*PresignedURLResponse, error) {
 
 	orderID := uuid.New().String()
 	s3key := fmt.Sprintf("%s/%s", order.FullName, orderID)
+	uploadTimestamp := time.Now().Unix()
 
+	// Insert metadata into DynamoDB
+	err = cfg.InsertMetadata(order.Email, orderID, uploadTimestamp)
+	if err != nil {
+		return nil, fmt.Errorf("failed to insert metadata into DynamoDB: %v", err)
+	}
+
+	// Initialize S3 client
 	s3Client, err := cfg.S3Client()
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize s3 client: %v", err)
