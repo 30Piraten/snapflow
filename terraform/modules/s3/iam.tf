@@ -53,7 +53,7 @@ resource "aws_s3_bucket_policy" "snapflow_s3_policy" {
                 Sid = "AllowCloudFrontReadAccess"
                 Effect = "Allow"
                 Principal = {
-                    AWS = aws_cloudfront_origin_access_identity.snapflow_origin_access_identity.iam_arn
+                    AWS = var.origin_access_identity_arn #aws_cloudfront_origin_access_identity.snapflow_oai.iam_arn
                 }
                 Action = "s3:GetObject"
                 Resource = "${aws_s3_bucket.processed_image_bucket.arn}/*"
@@ -79,7 +79,7 @@ resource "aws_s3_bucket_policy" "logging_bucket_policy" {
                 Resource = "${aws_s3_bucket.logging_bucket.arn}/*"
                 Condition = {
                     StringEquals = {
-                        "AWS:SourceArn" = aws_cloudfront_distribution.snapflow_cloudfront.arn
+                        "AWS:SourceArn" = var.cloudfront_distribution_arn #aws_cloudfront_distribution.snapflow_cloudfront.arn # 
                     }
                 }
             }

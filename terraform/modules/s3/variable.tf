@@ -13,3 +13,11 @@ variable "enable_key_rotation" {
 variable "deletion_window_in_days" {
   type = number
 }
+
+variable "cloudfront_distribution_arn" {
+  type = string
+}
+
+variable "origin_access_identity_arn" {
+  type = string
+}
