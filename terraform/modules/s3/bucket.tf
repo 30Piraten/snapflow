@@ -12,7 +12,7 @@ resource "random_id" "id" {
   byte_length = 8
 }
 
-resource "aws_s3_bucket" "processed_bucket" {
+resource "aws_s3_bucket" "processed_image_bucket" {
   bucket = "${var.bucket_name}-${random_id.id.hex}"
 
   force_destroy = var.force_destroy
@@ -25,7 +25,7 @@ resource "aws_s3_bucket" "processed_bucket" {
 
 resource "aws_s3_bucket_lifecycle_configuration" "processedS3_bucket_lifecycle" {
   
-  bucket = aws_s3_bucket.processed_bucket.id 
+  bucket = aws_s3_bucket.processed_image_bucket.id 
 
   rule {
     id = "expired-processed-photos"
@@ -39,7 +39,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "processedS3_bucket_lifecycle" 
 
 
 resource "aws_s3_bucket_public_access_block" "processed_bucket_block" {
-  bucket = aws_s3_bucket.processed_bucket.id
+  bucket = aws_s3_bucket.processed_image_bucket.id
 
   block_public_acls       = true
   block_public_policy     = true
@@ -47,13 +47,8 @@ resource "aws_s3_bucket_public_access_block" "processed_bucket_block" {
   restrict_public_buckets = true
 }
 
-# resource "aws_s3_bucket_acl" "processed_bucket_acl" {
-#   bucket = aws_s3_bucket.processed_bucket.id
-#   acl    = "private"
-# }
-
 resource "aws_s3_bucket_versioning" "processed_bucket_version" {
-  bucket = aws_s3_bucket.processed_bucket.id
+  bucket = aws_s3_bucket.processed_image_bucket.id
 
   versioning_configuration {
     status = "Enabled"
@@ -61,7 +56,7 @@ resource "aws_s3_bucket_versioning" "processed_bucket_version" {
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "processedS3_bucket_sse" {
-  bucket = aws_s3_bucket.processed_bucket.id
+  bucket = aws_s3_bucket.processed_image_bucket.id
 
 
   rule {
@@ -74,7 +69,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "processedS3_bucke
 
 # Target for CloudFront Signed URL
 resource "aws_s3_bucket_policy" "processed_bucket_policy" {
-  bucket = aws_s3_bucket.processed_bucket.id 
+  bucket = aws_s3_bucket.processed_image_bucket.id 
   
   policy = jsonencode({
     Version = "2012-10-17"
@@ -90,3 +85,4 @@ resource "aws_s3_bucket_policy" "processed_bucket_policy" {
     ]
   })
 }
+
