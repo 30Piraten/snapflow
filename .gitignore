@@ -5,3 +5,8 @@ frontend/.env
 *.tfstate
 *.tfstate.backup
 .terraform
+.terraform.lock.hcl
+
+docs/mainproject.md
+
+*.csv
