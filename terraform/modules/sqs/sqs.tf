@@ -1,7 +1,7 @@
 resource "aws_sqs_queue" "print_queue" {
-  name                      = "photo-print-queue"
-  visibility_timeout_seconds = 60
-  message_retention_seconds = 86400
-  max_message_size          = 262144
-  delay_seconds             = 0
+  name                      = var.queue_name
+  visibility_timeout_seconds = var.visibility_timeout_seconds
+  message_retention_seconds = var.message_retention_seconds
+  max_message_size          = var.max_message_size
+  delay_seconds             = var.delay_seconds
 }
