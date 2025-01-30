@@ -1,6 +1,6 @@
 variable "region" {
   type    = string
-  default = "us-west-2"
+  default = "us-east-1"
 }
 
 
@@ -12,7 +12,7 @@ variable "force_destroy" {
 
 variable "bucket_name" {
   type    = string
-  default = "snaps3flowbucket011"
+  default = "snaps3flowbucket02025"
 }
 
 variable "enable_key_rotation" {
@@ -28,10 +28,16 @@ variable "deletion_window_in_days" {
 # DYNAMODB BUCKET DEFINITION
 variable "dynamodb_name" {
   type    = string
-  default = "CustomerTable"
+  default = "processedCustomerTable2025"
 }
 
 variable "billing_mode" {
   type    = string
   default = "PAY_PER_REQUEST"
+}
+
+# CLOUDFRONT DISTRIBUTION DEFINITION
+variable "logging_bucket" {
+  type    = string
+  default = "snapflow-cloudfront-logs"  
 }

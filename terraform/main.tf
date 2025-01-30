@@ -2,6 +2,7 @@ module "s3" {
   source = "./modules/s3"
   bucket_name = var.bucket_name
   force_destroy = var.force_destroy
+  logging_bucket_name = var.logging_bucket
   enable_key_rotation = var.enable_key_rotation
   deletion_window_in_days = var.deletion_window_in_days
   origin_access_identity_arn = module.cloudfront.origin_access_identity_arn
@@ -18,7 +19,7 @@ module "cloudfront" {
   source = "./modules/cloudfront"
   domain_name = module.s3.domain_name
   origin_id = module.s3.origin_id
-  logging_bucket = module.s3.logging_bucket
+  logging_bucket = var.logging_bucket
 }
 
 module "notification" {
