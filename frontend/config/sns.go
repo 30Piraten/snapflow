@@ -71,6 +71,16 @@ func ProcessedPhotoHandler(customerEmail string, orderID string, customerName st
 	return SendNotification(customerEmail, orderID, signedURL)
 }
 
+// // Simulate a delay before sending the SNS notification
+// func DelayedSendNotification(email string, message string) {
+// 	log.Println("Delaying SNS notification for 10 seconds...")
+// 	time.Sleep(10 * time.Second) // Delay for 10 seconds
+// 	err := SendNotification(email, message)
+// 	if err != nil {
+// 		log.Printf("Failed to send SNS notification: %v", err)
+// 	}
+// }
+
 // ProcessedPhotoHandler handles photo processing and sends notification
 // func ProcessedPhotoHandler(customerEmail string, photoIDs []string, processedS3Location string) error {
 // 	// Generate the CloudFront signed URL for the processed photo

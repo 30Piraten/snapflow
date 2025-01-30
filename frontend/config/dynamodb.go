@@ -91,3 +91,24 @@ func UpdateMetadata(customerEmail, photoID, processedLocation string) error {
 
 	return nil
 }
+
+// UpdatePrintStatus updates the print status in DynamoDB
+func UpdatePrintStatus(customerEmail, photoID, status string) error {
+	InitDynamoDB()
+	_, err := dynamoClient.UpdateItem(context.Background(), &dynamodb.UpdateItemInput{
+		TableName: aws.String("customer_data_table"),
+		Key: map[string]types.AttributeValue{
+			"customer_email": &types.AttributeValueMemberS{Value: customerEmail},
+			"photo_id":       &types.AttributeValueMemberS{Value: photoID},
+		},
+		UpdateExpression: aws.String("SET print_status = :s"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":s": &types.AttributeValueMemberS{Value: status},
+		},
+	})
+	if err != nil {
+		log.Printf("Failed to update print status in DynamoDB: %v", err)
+		return err
+	}
+	return nil
+}
