@@ -17,3 +17,4 @@ variable "visibility_timeout_seconds" {
 variable "queue_name" {
   type = string
 }
+
