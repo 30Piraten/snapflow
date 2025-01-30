@@ -27,7 +27,7 @@ resource "aws_cloudfront_distribution" "snapflow_cloudfront" {
   default_cache_behavior {
     allowed_methods  = ["GET", "HEAD"]
     cached_methods   = ["GET", "HEAD"]
-    target_origin_id = var.domain_name
+    target_origin_id = var.origin_id
 
     forwarded_values {
       query_string = false
@@ -41,8 +41,8 @@ resource "aws_cloudfront_distribution" "snapflow_cloudfront" {
     
     # Optimize caching strategy
     min_ttl     = 0
-    default_ttl = 300  # 5 minutes
-    max_ttl     = 1800 # 30 Minutes
+    default_ttl = 60  # 1 minute
+    max_ttl     = 300 # 5 Minutes
 
     # Add security headers
     response_headers_policy_id = aws_cloudfront_response_headers_policy.security_headers.id
@@ -52,7 +52,7 @@ resource "aws_cloudfront_distribution" "snapflow_cloudfront" {
     path_pattern     = "/images/*"
     allowed_methods  = ["GET", "HEAD", "OPTIONS"]
     cached_methods   = ["GET", "HEAD", "OPTIONS"]
-    target_origin_id = var.domain_name
+    target_origin_id = var.origin_id
 
     forwarded_values {
       query_string = false
@@ -62,8 +62,8 @@ resource "aws_cloudfront_distribution" "snapflow_cloudfront" {
     }
 
     min_ttl     = 0
-    default_ttl = 300    # 5 hours
-    max_ttl     = 1800 # 30 Minutes
+    default_ttl = 60    # 1 minute
+    max_ttl     = 300 # 5 Minutes
     viewer_protocol_policy = "redirect-to-https"
 
     # Add security headers
@@ -93,7 +93,6 @@ resource "aws_cloudfront_distribution" "snapflow_cloudfront" {
   }
 }
 
-/////////
 # Add security headers
 resource "aws_cloudfront_response_headers_policy" "security_headers" {
   name = "security-headers-policy"
@@ -105,17 +104,21 @@ resource "aws_cloudfront_response_headers_policy" "security_headers" {
       include_subdomains = true
       preload = true
     }
+
     content_security_policy {
-      override = true
-      content_security_policy = "default-src 'self'; img-src 'self' data:; script-src 'self'"
-    }
+    override = true
+    content_security_policy = "default-src 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+  }
+
     content_type_options {
       override = true
     }
-    frame_options {
+
+    xss_protection {
       override = true
-      frame_option = "DENY"
+      protection = true
     }
+
     referrer_policy {
       override = true
       referrer_policy = "same-origin"

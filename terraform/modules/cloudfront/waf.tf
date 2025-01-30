@@ -25,7 +25,7 @@ resource "aws_wafv2_web_acl" "cloudfront_waf" {
     }
 
     rule {
-        name = "validate-content-type"
+        name = "rate-limiting"
         priority = 1
         action {
           block {
@@ -33,19 +33,10 @@ resource "aws_wafv2_web_acl" "cloudfront_waf" {
           }
         }
         statement {
-            byte_match_statement {
-              search_string = "application/json"
-              field_to_match {
-                single_header {
-                    name = "content-type"
-                }
+            rate_based_statement {
+                limit = 1000
+                aggregate_key_type = "IP"
               }
-              positional_constraint = "EXACTLY"
-              text_transformation {
-                priority = 0
-                type = "NONE"
-              }
-            }
         }
 
         visibility_config {

@@ -80,7 +80,7 @@ resource "aws_s3_bucket_policy" "processed_bucket_policy" {
                 Service = "lambda.amazonaws.com"
             }
             Action = ["S3:GetObject", "s3:PutObject"]
-            Resource = "arn:aws:s3:::${aws_s3_bucket.processed_bucket.id}/*"
+            Resource = "arn:aws:s3:::${aws_s3_bucket.processed_image_bucket.id}/*"
         }
     ]
   })

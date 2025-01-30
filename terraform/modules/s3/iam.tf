@@ -34,7 +34,7 @@ resource "aws_iam_role_policy" "iam_role_policy" {
                 ]
                 Effect = "Allow"
                 Resource = [
-                    "arn:aws:s3:::${aws_s3_bucket.processed_bucket.id}/*"
+                    "arn:aws:s3:::${aws_s3_bucket.processed_image_bucket.id}/*"
                 ]
             }
         ]
