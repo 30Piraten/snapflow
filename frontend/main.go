@@ -5,8 +5,10 @@ import (
 	"os"
 	"time"
 
+	"github.com/30Piraten/snapflow/config"
 	"github.com/30Piraten/snapflow/routes"
 	"github.com/30Piraten/snapflow/utils"
+	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
@@ -64,6 +66,9 @@ func main() {
 
 	// Register route
 	routes.Handler(app)
+
+	// Lambda handler
+	lambda.Start(config.Handler)
 
 	// Setup static file serving if needed
 	app.Static("/public", "./public")

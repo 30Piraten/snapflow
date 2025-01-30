@@ -3,9 +3,11 @@ module github.com/30Piraten/snapflow
 go 1.23.4
 
 require (
+	github.com/aws/aws-sdk-go v1.55.6
 	github.com/aws/aws-sdk-go-v2 v1.34.0
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.44.6
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.39.6
+	github.com/aws/aws-sdk-go-v2/service/sqs v1.37.10
 	github.com/gofiber/fiber/v2 v2.52.6
 	github.com/gofiber/template/html/v2 v2.1.3
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
