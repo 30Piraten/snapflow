@@ -1,5 +1,5 @@
 resource "aws_iam_role" "lambda_role" {
-    name = ""
+    name = "lambda-role-service"
     assume_role_policy = jsonencode({
         Version = "2012-10-17"
         Statement = [
@@ -9,14 +9,13 @@ resource "aws_iam_role" "lambda_role" {
                 Principal = {
                     Service = "lambda.amazonaws.com"
                 }
-                Resource = "*" // lambda arn 
             }
         ]
     })
 }
 
 resource "aws_iam_policy" "lambda_policy" {
-  name = ""
+  name = "lambda-iam-policy"
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -27,7 +26,7 @@ resource "aws_iam_policy" "lambda_policy" {
             "sqs:ReceiveMessage",
         ]
         Effect = "Allow"
-        Resource = ""
+        Resource = "${aws_lambda_function.dummy_print_service.arn}"
     },
     ]
   })

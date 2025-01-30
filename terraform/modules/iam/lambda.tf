@@ -1,5 +1,5 @@
 locals {
-  filepath = "${path.root}/frontend/config/build/dummyPrinter.zip"
+  filepath = "${path.root}/frontend/config/script/dummyPrinter.zip"
 }
 
 //
@@ -13,10 +13,11 @@ resource "null_resource" "build_lambda" {
 resource "aws_lambda_function" "dummy_print_service" {
   function_name = "dummyPrinter"
   filename = local.filepath
-  handler = "main"
+  handler = "bootstrap"
   runtime = "provided.al2"
-  source_code_hash = filebase64sha256(local.filepath)
-  role = aws_iam_role.lambda_role.arn 
+  role = aws_iam_role.lambda_exec_role.arn 
+
+  depends_on = [ null_resource.build_lambda ]
 }
 
 resource "aws_iam_role" "lambda_exec_role" {

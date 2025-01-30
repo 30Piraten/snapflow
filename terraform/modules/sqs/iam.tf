@@ -5,12 +5,11 @@ resource "aws_iam_role" "sqs_role" {
         Version = "2012-10-17"
         Statement = [
             {
-                Effect: "Allow"
-                Action: "sts:AssumeRole"
-                Principal: {
-                    Service: "lambda.amazonaws.com"
+                Effect = "Allow"
+                Action = "sts:AssumeRole"
+                Principal = {
+                    Service = "lambda.amazonaws.com"
                 }
-                Resource = "${aws_sqs_queue.print_queue.arn}"
             }
         ]
     })
@@ -23,11 +22,12 @@ resource "aws_iam_role_policy" "sqs_role_policy" {
         Version = "2012-10-17"
         Statement = [
             {
-                Effect: "Allow"
-                Action: [
+                Effect = "Allow"
+                Action = [
                     "sqs:SendMessage",
                     "sqs:ReceiveMessage",
-                    "sqs:DeleteMessage"
+                    "sqs:DeleteMessage",
+                    "sqs:GetQueueAttribute"
                 ]
                 Resource = "${aws_sqs_queue.print_queue.arn}"
             }
