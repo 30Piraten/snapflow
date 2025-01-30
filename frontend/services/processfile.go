@@ -11,11 +11,14 @@ import (
 	"os"
 
 	cfg "github.com/30Piraten/snapflow/config"
+	"github.com/30Piraten/snapflow/handlers"
 	"github.com/30Piraten/snapflow/utils"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/joho/godotenv"
 )
+
+var printjob cfg.PrintJob
 
 // ProcessFile validates and processes a single file. It takes a multipart.FileHeader
 // and options for image processing. It first validates the file for security, then
@@ -78,13 +81,12 @@ func ProcessFile(file *multipart.FileHeader, opts ProcessingOptions, order Photo
 	region := os.Getenv("AWS_REGION")
 	bucketName := os.Getenv("BUCKET_NAME")
 
-	// Initialise S3 Client and Upload files to bucket
+	// Initialise S3 Client
 	config, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
 		log.Fatalf("Failed to load AWS config: %v", err)
 	}
 
-	// TODO
 	// var order utils.PhotoOrder
 	s3Client := s3.NewFromConfig(config)
 
@@ -118,6 +120,17 @@ func ProcessFile(file *multipart.FileHeader, opts ProcessingOptions, order Photo
 		}
 	}
 
+	// Simulate PrintJob
+	err = handlers.InitiatePrintJob(printjob.CustomerEmail, printjob.PhotoID, printjob.ProcessedS3Location)
+	if err != nil {
+		return FileProcessingResult{
+			Error: &ProcessingError{
+				Type:    "PrintJobError",
+				Code:    ErrCodeProcessingFailed,
+				Message: fmt.Sprintf("failed to initiate print job: %v", err),
+			},
+		}
+	}
 	////////////////////////////////////////////////////////////////////
 
 	return FileProcessingResult{

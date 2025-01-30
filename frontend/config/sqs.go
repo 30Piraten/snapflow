@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"os"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -11,27 +12,29 @@ import (
 )
 
 var sqsClient *sqs.Client
-var queueURL = "https://sqs.us-east-1.amazonaws.com/YOUR_ACCOUNT_ID/photo-print-queue"
+var queueURL = os.Getenv("SQS_QUEUE_URL")
 
-func InitSQS() {
-	cfg, err := config.LoadDefaultConfig(context.TODO())
-	if err != nil {
-		log.Fatalf("unable to load SDK config, %v", err)
-	}
-	sqsClient = sqs.NewFromConfig(cfg)
-}
-
-// PrintJob represents a print request message
-type PrintJob struct {
-	CustomerEmail       string `json:"customer_email"`
-	PhotoID             string `json:"photo_id"`
-	ProcessedS3Location string `json:"processed_s3_location"`
-}
+// func InitSQS() {
+// 	if sqsClient != nil {
+// 		cfg, err := config.LoadDefaultConfig(context.TODO())
+// 		if err != nil {
+// 			log.Fatalf("unable to load SDK config, %v", err)
+// 		}
+// 		sqsClient = sqs.NewFromConfig(cfg)
+// 	}
+// }
 
 // SendPrintRequest sends a print job request to SQS
 func SendPrintRequest(customerEmail, photoID, processedS3Location string) error {
-	InitSQS()
 
+	// Load AWS config
+	config, err := config.LoadDefaultConfig(context.TODO())
+	if err != nil {
+		log.Fatal("failed to load configuration, ", err)
+	}
+	client := sqs.NewFromConfig(config)
+
+	// Create message structure for SQS
 	job := PrintJob{
 		CustomerEmail:       customerEmail,
 		PhotoID:             photoID,
@@ -43,7 +46,8 @@ func SendPrintRequest(customerEmail, photoID, processedS3Location string) error 
 		return err
 	}
 
-	_, err = sqsClient.SendMessage(context.Background(), &sqs.SendMessageInput{
+	// Send message to SQS
+	_, err = client.SendMessage(context.Background(), &sqs.SendMessageInput{
 		QueueUrl:    aws.String(queueURL),
 		MessageBody: aws.String(string(jobBytes)),
 	})
@@ -52,25 +56,30 @@ func SendPrintRequest(customerEmail, photoID, processedS3Location string) error 
 		log.Printf("Failed to send print request to SQS: %v", err)
 	}
 
+	log.Println("Print request sent to SQS", photoID)
 	return err
 }
 
-func SendToSQS(queueURL string, messageBody string) error {
-	config, err := config.LoadDefaultConfig(context.Background())
-	if err != nil {
-		log.Fatalf("unable to load SDK config, %v", err)
-	}
-	client := sqs.NewFromConfig(config)
+// Send an SQS message first (with a delay).
+// // Trigger Lambda from SQS to send SNS after the delay.
+// func SendToSQS(queueURL string, messageBody string) error {
 
-	_, err = client.SendMessage(context.Background(), &sqs.SendMessageInput{
-		QueueUrl:     aws.String(queueURL),
-		MessageBody:  aws.String(messageBody),
-		DelaySeconds: 10, // Delay message for 10 seconds
-	})
+// 	// Load AWS config
+// 	config, err := config.LoadDefaultConfig(context.Background())
+// 	if err != nil {
+// 		log.Fatalf("unable to load SDK config, %v", err)
+// 	}
+// 	client := sqs.NewFromConfig(config)
 
-	if err != nil {
-		log.Printf("Failed to send message to SQS: %v", err)
-	}
+// 	_, err = client.SendMessage(context.Background(), &sqs.SendMessageInput{
+// 		QueueUrl:     aws.String(queueURL),
+// 		MessageBody:  aws.String(messageBody),
+// 		DelaySeconds: 10, // Delay message for 10 seconds
+// 	})
 
-	return err
-}
+// 	if err != nil {
+// 		log.Printf("Failed to send message to SQS: %v", err)
+// 	}
+
+// 	return err
+// }

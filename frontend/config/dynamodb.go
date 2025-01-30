@@ -13,10 +13,6 @@ import (
 	"github.com/joho/godotenv"
 )
 
-var (
-	dynamoClient *dynamodb.Client
-)
-
 func InitDynamoDB() {
 	cfg, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {

@@ -12,8 +12,6 @@ import (
 	"github.com/joho/godotenv"
 )
 
-var snsClient *sns.Client
-
 func init() {
 	InitCloudFront()
 
