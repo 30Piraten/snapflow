@@ -8,12 +8,12 @@
 # So, the use of lifecyle rule is required to delete or remove photos
 # once a confirmation via SES is sent to the user
 
-resource "random_id" "id" {
-  byte_length = 8
-}
+# resource "random_id" "id" {
+#   byte_length = 8
+# }
 
 resource "aws_s3_bucket" "processed_image_bucket" {
-  bucket = "${var.bucket_name}-${random_id.id.hex}"
+  bucket = var.bucket_name
 
   force_destroy = var.force_destroy
 
@@ -35,7 +35,6 @@ resource "aws_s3_bucket_lifecycle_configuration" "processedS3_bucket_lifecycle" 
     status = "Enabled"
   }
 }
-
 
 
 resource "aws_s3_bucket_public_access_block" "processed_bucket_block" {

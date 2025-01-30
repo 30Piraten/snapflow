@@ -17,7 +17,7 @@ resource "aws_cloudfront_distribution" "snapflow_cloudfront" {
   # Updated logging configuration to use a dedicated logging bucket
   logging_config {
     include_cookies = false
-    bucket         = "${var.logging_bucket}"
+    bucket         = "${var.logging_bucket}.s3.amazonaws.com"
     prefix         = "cloudfront-logs/"
   }
 
@@ -71,7 +71,7 @@ resource "aws_cloudfront_distribution" "snapflow_cloudfront" {
   }
 
   # Web Application Firewall integration
-  web_acl_id = aws_wafv2_web_acl.cloudfront_waf.id
+  web_acl_id = aws_wafv2_web_acl.cloudfront_waf.arn
 
   restrictions {
     geo_restriction {
@@ -81,9 +81,10 @@ resource "aws_cloudfront_distribution" "snapflow_cloudfront" {
 
   # Use custom SSL certificate
   viewer_certificate {
-    acm_certificate_arn      = aws_acm_certificate.cdn_cert.arn
+    # acm_certificate_arn      = aws_acm_certificate.cdn_cert.arn
     ssl_support_method       = "sni-only"
     minimum_protocol_version = "TLSv1.2_2021"
+    cloudfront_default_certificate = true
   }
 
   tags = {

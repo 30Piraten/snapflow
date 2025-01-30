@@ -22,11 +22,6 @@ resource "aws_iam_role" "lambda_execution_role" {
     })
 }
 
-resource "aws_iam_role_policy_attachment" "lambda_sns_publish_attachment" {
-  policy_arn = aws_iam_policy.lambda_sns_publish_policy.arn
-  role = aws_iam_role.lambda_execution_role.name
-}
-
 # Define the permissions for the Lambda execution role to allow
 # publishing SNS messages
 data "aws_iam_policy_document" "lambda_sns_publish_policy" {
@@ -36,4 +31,9 @@ data "aws_iam_policy_document" "lambda_sns_publish_policy" {
       ]
       resources = [ aws_sns_topic.topic.arn ]
     }
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_sns_publish_attachment" {
+  policy_arn = aws_iam_policy.lambda_sns_publish_policy.arn
+  role = aws_iam_role.lambda_execution_role.name
 }

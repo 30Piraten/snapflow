@@ -75,11 +75,11 @@ resource "aws_s3_bucket_policy" "logging_bucket_policy" {
                 Principal = {
                     Service = "cloudfront.amazonaws.com"
                 }
-                Action = "s3:PutObject"
+                Action = ["s3:PutObject"]
                 Resource = "${aws_s3_bucket.logging_bucket.arn}/*"
                 Condition = {
                     StringEquals = {
-                        "AWS:SourceArn" = var.cloudfront_distribution_arn #aws_cloudfront_distribution.snapflow_cloudfront.arn # 
+                        "aws:SourceArn" = var.cloudfront_distribution_arn #aws_cloudfront_distribution.snapflow_cloudfront.arn # 
                     }
                 }
             }
