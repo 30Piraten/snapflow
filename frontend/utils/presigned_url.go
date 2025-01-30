@@ -49,8 +49,8 @@ func GeneratePresignedURL(order *PhotoOrder) (*PresignedURLResponse, error) {
 	}
 
 	orderID := uuid.New().String()
-	s3key := fmt.Sprintf("%s/%s", order.FullName, orderID)
 	uploadTimestamp := time.Now().Unix()
+	folderKey := fmt.Sprintf("%s/%s", order.FullName, orderID)
 
 	// Insert metadata into DynamoDB
 	err = cfg.InsertMetadata(order.FullName, order.Email, orderID, uploadTimestamp)
@@ -64,32 +64,51 @@ func GeneratePresignedURL(order *PhotoOrder) (*PresignedURLResponse, error) {
 		return nil, fmt.Errorf("failed to initialize s3 client: %v", err)
 	}
 
-	// Get bucket name from .envs
+	// Get bucket name from .env file
 	bucketName := os.Getenv("BUCKET_NAME")
 
 	presignedClient := s3.NewPresignClient(s3Client)
-	presignedPut, err := presignedClient.PresignPutObject(context.TODO(),
-		&s3.PutObjectInput{
-			Bucket: aws.String(bucketName),
-			Key:    aws.String(s3key),
-			// ACL:    aws.String("private"),
-			Metadata: map[string]string{
-				"full_name":  order.FullName,
-				"location":   order.Location,
-				"size":       order.Size,
-				"paper_type": order.PaperType,
-				"order_id":   orderID,
-				"email":      order.Email,
+
+	// Generate presigned URLs for each photo
+	var presignedURLs []string
+	for _, photo := range order.Photos {
+		photoKey := fmt.Sprintf("%s/%s", folderKey, photo.Filename)
+
+		presignedPut, err := presignedClient.PresignPutObject(context.TODO(),
+			&s3.PutObjectInput{
+				Bucket: aws.String(bucketName),
+				Key:    aws.String(photoKey),
+				Metadata: map[string]string{
+					"full_name":  order.FullName,
+					"location":   order.Location,
+					"size":       order.Size,
+					"paper_type": order.PaperType,
+					"order_id":   orderID,
+					"email":      order.Email,
+				},
 			},
-		},
-		s3.WithPresignExpires(time.Minute*15),
-	)
+			s3.WithPresignExpires(time.Minute*15),
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to generate presigned URL: %v", err)
+		}
+		presignedURLs = append(presignedURLs, presignedPut.URL)
+	}
+
+	// Generate a single signed URL for the entire folder via CloudFront
+	folderSignedURL, err := cfg.GenerateSignedURL(folderKey)
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate presigned URL: %v", err)
+		return nil, fmt.Errorf("failed to generate signed URL for folder: %v", err)
+	}
+
+	// Send notification via SNS after presigned URL is generated
+	err = cfg.ProcessedPhotoHandler(order.Email, orderID, order.FullName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to send notification via SNS: %v", err)
 	}
 
 	return &PresignedURLResponse{
-		URL:     presignedPut.URL,
+		URL:     folderSignedURL,
 		OrderID: orderID,
 	}, nil
 }

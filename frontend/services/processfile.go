@@ -25,7 +25,7 @@ import (
 // FileProcessingResult containing the path of the saved image, the filename and
 // size of the original file. If an error occurs during processing, it returns a
 // ProcessingError with the appropriate code and message.
-func ProcessFile(file *multipart.FileHeader, opts ProcessingOptions) FileProcessingResult {
+func ProcessFile(file *multipart.FileHeader, opts ProcessingOptions, order PhotoOrder) FileProcessingResult {
 	// Open the file
 	source, err := file.Open()
 	if err != nil {
@@ -88,9 +88,9 @@ func ProcessFile(file *multipart.FileHeader, opts ProcessingOptions) FileProcess
 	// var order utils.PhotoOrder
 	s3Client := s3.NewFromConfig(config)
 
-	// Here we generate a unique file path in S3
+	// Here we generate a unique file path in S3 under user's folder
 	uniqueFileName := generateUniqueFileName(file.Filename)
-	s3key := fmt.Sprintf("uploads/%s", uniqueFileName)
+	s3key := fmt.Sprintf("uploads/%s/%s", order.FullName, uniqueFileName)
 
 	// Convert processedImage to []byte
 	var buf bytes.Buffer
@@ -119,18 +119,6 @@ func ProcessFile(file *multipart.FileHeader, opts ProcessingOptions) FileProcess
 	}
 
 	////////////////////////////////////////////////////////////////////
-
-	// outputPath := fmt.Sprintf("./%s/%s", config.S3Bucket(c, bucket_name, AWS_REGION), generateUniqueFileName(file.Filename))
-
-	// if err := processor.SaveImage(processedImage, outputPath, opts); err != nil {
-	// 	return FileProcessingResult{
-	// 		Error: &ProcessingError{
-	// 			Type:    "FileError",
-	// 			Code:    ErrCodeFileSave,
-	// 			Message: fmt.Sprintf("failed to save processed image: %v", err),
-	// 		},
-	// 	}
-	// }
 
 	return FileProcessingResult{
 		Path:     s3key, // Changed the name from s3Path to s3Key

@@ -1,12 +1,22 @@
 package services
 
 import (
+	"mime/multipart"
 	"sync"
 	"time"
 
 	"github.com/30Piraten/snapflow/utils"
 	"go.uber.org/zap"
 )
+
+type PhotoOrder struct {
+	FullName  string                  `json:"fullName"`
+	Location  string                  `json:"location"`
+	Size      string                  `json:"size"`
+	PaperType string                  `json:"paperType"`
+	Email     string                  `json:"email"`
+	Photos    []*multipart.FileHeader `json:"photos"`
+}
 
 // image.go file definition
 // Quality settings for image processing

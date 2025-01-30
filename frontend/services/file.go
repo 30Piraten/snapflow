@@ -121,7 +121,7 @@ func handleSingleFile(c *fiber.Ctx, file *multipart.FileHeader, opts ProcessingO
 	}
 
 	// Process the file
-	result := ProcessFile(file, opts)
+	result := ProcessFile(file, opts, PhotoOrder{})
 	if result.Error != nil {
 		return utils.HandleError(c, fiber.StatusInternalServerError, "Failed to process file", result.Error)
 	}
@@ -187,7 +187,7 @@ func ProcessMultipleFiles(files []*multipart.FileHeader, opts ProcessingOptions)
 			semaphore <- struct{}{}
 			defer func() { <-semaphore }()
 
-			result := ProcessFile(file, opts)
+			result := ProcessFile(file, opts, PhotoOrder{})
 			if result.Error != nil {
 				errorsChan <- result.Error
 			} else {
