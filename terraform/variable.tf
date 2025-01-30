@@ -41,3 +41,29 @@ variable "logging_bucket" {
   type    = string
   default = "snapflow-cloudfront-logs"  
 }
+
+# SQS QUEUE DEFINITION
+variable "max_message_size" {
+  type    = number
+  default = 262144
+}
+
+variable "delay_seconds" {
+  type    = number
+  default = 5
+}
+
+variable "message_retention_seconds" {
+  type    = number
+  default = 86400
+}
+
+variable "visibility_timeout_seconds" {
+  type    = number
+  default = 30
+}
+
+variable "queue_name" {
+  type    = string
+  default = "snapflow-photo-print-queue"
+}

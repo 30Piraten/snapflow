@@ -25,3 +25,17 @@ module "cloudfront" {
 module "notification" {
   source = "./modules/notification"
 }
+
+module "sqs" {
+  source = "./modules/sqs"
+  queue_name = var.queue_name 
+  message_retention_seconds = var.message_retention_seconds
+  visibility_timeout_seconds = var.visibility_timeout_seconds
+  max_message_size = var.max_message_size
+  delay_seconds = var.delay_seconds
+}
+
+module "iam" {
+  source = "./modules/iam"
+  event_source_arn = module.sqs.sqs_event_source_arn
+}
