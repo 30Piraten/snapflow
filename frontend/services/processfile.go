@@ -15,7 +15,6 @@ import (
 	"github.com/30Piraten/snapflow/utils"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/joho/godotenv"
 )
 
 var printjob cfg.PrintJob
@@ -68,16 +67,6 @@ func ProcessFile(file *multipart.FileHeader, opts ProcessingOptions, order Photo
 	}
 
 	////////////////////////////////////////////////////////////////////
-	// Save photos to s3 bucket here
-	// Save the processed image
-	// outputPath := fmt.Sprintf("./%s/%s", ProcessedImageDir, generateUniqueFileName(file.Filename))
-
-	// Load .env variables and make use of them
-	err = godotenv.Load()
-	if err != nil {
-		log.Fatal("failed to load .env file", err)
-	}
-
 	region := os.Getenv("AWS_REGION")
 	bucketName := os.Getenv("BUCKET_NAME")
 
@@ -120,7 +109,7 @@ func ProcessFile(file *multipart.FileHeader, opts ProcessingOptions, order Photo
 		}
 	}
 
-	// Simulate PrintJob
+	// Simulate PrintJob -> TODO: CHECK AGAIN IF TO USE order.Photo, etc, instead
 	err = handlers.InitiatePrintJob(printjob.CustomerEmail, printjob.PhotoID, printjob.ProcessedS3Location)
 	if err != nil {
 		return FileProcessingResult{
@@ -134,7 +123,7 @@ func ProcessFile(file *multipart.FileHeader, opts ProcessingOptions, order Photo
 	////////////////////////////////////////////////////////////////////
 
 	return FileProcessingResult{
-		Path:     s3key, // Changed the name from s3Path to s3Key
+		Path:     s3key, // <- Changed the name from s3Path to s3Key
 		Filename: file.Filename,
 		Size:     file.Size,
 	}

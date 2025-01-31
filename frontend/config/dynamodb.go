@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	"github.com/joho/godotenv"
 )
 
 func InitDynamoDB() {
@@ -23,11 +22,6 @@ func InitDynamoDB() {
 
 // InsertMetadata inserts metadata for a new photo upload.
 func InsertMetadata(customerFullName, customerEmail, photoID string, timestamp int64) error {
-	ok := godotenv.Load()
-	if ok != nil {
-		log.Fatal("failed to load .env file")
-	}
-
 	tableName := os.Getenv("DYNAMODB_TABLE_NAME")
 
 	_, err := dynamoClient.PutItem(context.Background(), &dynamodb.PutItemInput{

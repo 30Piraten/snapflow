@@ -16,17 +16,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// CloudFront private key path
-var privateKeyPath string
-
-// CloudFront key pair ID and domain
-
-var (
-	cloudFrontClient *cloudfront.Client
-	privateKey       *rsa.PrivateKey
-	keyPairID        string
-	cloudFrontDomain string
-)
+var info *SignedURLInfo
 
 // CloudFrontClient initializes a CloudFront client using the default AWS config.
 func InitCloudFront() {

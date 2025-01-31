@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/google/uuid"
-	"github.com/joho/godotenv"
 )
 
 // PhotoOrder represents the structure of o÷ur form data
@@ -39,11 +38,6 @@ func GeneratePresignedURL(order *PhotoOrder) (*PresignedURLResponse, error) {
 	// Initialize DyanmoDB client
 	cfg.InitDynamoDB()
 
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("failed to load .env file")
-	}
-
 	if order.FullName == "" || order.Email == "" {
 		return nil, fmt.Errorf("missing required fields for presigned URL generation")
 	}
@@ -53,7 +47,7 @@ func GeneratePresignedURL(order *PhotoOrder) (*PresignedURLResponse, error) {
 	folderKey := fmt.Sprintf("%s/%s", order.FullName, orderID)
 
 	// Insert metadata into DynamoDB
-	err = cfg.InsertMetadata(order.FullName, order.Email, orderID, uploadTimestamp)
+	err := cfg.InsertMetadata(order.FullName, order.Email, orderID, uploadTimestamp)
 	if err != nil {
 		return nil, fmt.Errorf("failed to insert metadata into DynamoDB: %v", err)
 	}
@@ -101,7 +95,10 @@ func GeneratePresignedURL(order *PhotoOrder) (*PresignedURLResponse, error) {
 		return nil, fmt.Errorf("failed to generate signed URL for folder: %v", err)
 	}
 
-	// Send notification via SNS after presigned URL is generated
+	// Print signed url
+	log.Printf("SIGNED URL: %s", folderSignedURL)
+
+	// Send notification via SNS after signed URL is generated
 	err = cfg.ProcessedPhotoHandler(order.Email, orderID, order.FullName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send notification via SNS: %v", err)
