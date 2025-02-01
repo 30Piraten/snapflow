@@ -14,16 +14,6 @@ import (
 var sqsClient *sqs.Client
 var queueURL = os.Getenv("SQS_QUEUE_URL")
 
-// func InitSQS() {
-// 	if sqsClient != nil {
-// 		cfg, err := config.LoadDefaultConfig(context.TODO())
-// 		if err != nil {
-// 			log.Fatalf("unable to load SDK config, %v", err)
-// 		}
-// 		sqsClient = sqs.NewFromConfig(cfg)
-// 	}
-// }
-
 // SendPrintRequest sends a print job request to SQS
 func SendPrintRequest(customerEmail, photoID, processedS3Location string) error {
 

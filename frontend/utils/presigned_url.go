@@ -3,7 +3,6 @@ package utils
 import (
 	"context"
 	"fmt"
-	"log"
 	"mime/multipart"
 	"os"
 	"time"
@@ -90,22 +89,22 @@ func GeneratePresignedURL(order *PhotoOrder) (*PresignedURLResponse, error) {
 	}
 
 	// Generate a single signed URL for the entire folder via CloudFront
-	folderSignedURL, err := cfg.GenerateSignedURL(folderKey)
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate signed URL for folder: %v", err)
-	}
+	// folderSignedURL, err := cfg.GenerateSignedURL(folderKey)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("failed to generate signed URL for folder: %v", err)
+	// }
 
 	// Print signed url
-	log.Printf("SIGNED URL: %s", folderSignedURL)
+	// log.Printf("SIGNED URL: %s", folderSignedURL)
 
 	// Send notification via SNS after signed URL is generated
-	err = cfg.ProcessedPhotoHandler(order.Email, orderID, order.FullName)
-	if err != nil {
-		return nil, fmt.Errorf("failed to send notification via SNS: %v", err)
-	}
+	// err = cfg.ProcessedPhotoHandler(order.Email, orderID, order.FullName)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("failed to send notification via SNS: %v", err)
+	// }
 
 	return &PresignedURLResponse{
-		URL:     folderSignedURL,
+		URL:     presignedURLs[0],
 		OrderID: orderID,
 	}, nil
 }

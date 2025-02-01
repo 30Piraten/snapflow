@@ -11,7 +11,6 @@ import (
 	"os"
 
 	cfg "github.com/30Piraten/snapflow/config"
-	"github.com/30Piraten/snapflow/handlers"
 	"github.com/30Piraten/snapflow/utils"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
@@ -75,8 +74,6 @@ func ProcessFile(file *multipart.FileHeader, opts ProcessingOptions, order Photo
 	if err != nil {
 		log.Fatalf("Failed to load AWS config: %v", err)
 	}
-
-	// var order utils.PhotoOrder
 	s3Client := s3.NewFromConfig(config)
 
 	// Here we generate a unique file path in S3 under user's folder
@@ -110,16 +107,16 @@ func ProcessFile(file *multipart.FileHeader, opts ProcessingOptions, order Photo
 	}
 
 	// Simulate PrintJob -> TODO: CHECK AGAIN IF TO USE order.Photo, etc, instead
-	err = handlers.InitiatePrintJob(printjob.CustomerEmail, printjob.PhotoID, printjob.ProcessedS3Location)
-	if err != nil {
-		return FileProcessingResult{
-			Error: &ProcessingError{
-				Type:    "PrintJobError",
-				Code:    ErrCodeProcessingFailed,
-				Message: fmt.Sprintf("failed to initiate print job: %v", err),
-			},
-		}
-	}
+	// err = handlers.InitiatePrintJob(printjob.CustomerEmail, printjob.PhotoID, printjob.ProcessedS3Location)
+	// if err != nil {
+	// 	return FileProcessingResult{
+	// 		Error: &ProcessingError{
+	// 			Type:    "PrintJobError",
+	// 			Code:    ErrCodeProcessingFailed,
+	// 			Message: fmt.Sprintf("failed to initiate print job: %v", err),
+	// 		},
+	// 	}
+	// }
 	////////////////////////////////////////////////////////////////////
 
 	return FileProcessingResult{
