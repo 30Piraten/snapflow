@@ -1,14 +1,12 @@
 package routes
 
 import (
-	"log"
 	"os"
 	"strings"
 
 	svc "github.com/30Piraten/snapflow/services"
 	"github.com/30Piraten/snapflow/utils"
 	"github.com/gofiber/fiber/v2"
-	"github.com/joho/godotenv"
 	"go.uber.org/zap"
 )
 
@@ -17,12 +15,6 @@ import (
 // and return a successful response containing the order details, presigned URL
 // and order ID.
 func HandleOrderSubmission(c *fiber.Ctx) error {
-
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Failed to load .env file")
-
-	}
 
 	// trustedOrigin defines the trusted frontend domain
 	trustedOrigin := os.Getenv("TRUSTED_ORIGIN")

@@ -3,19 +3,34 @@ package config
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	"github.com/joho/godotenv"
+)
+
+const (
+	maxRetries = 3
+	retryDelay = 1 * time.Second
 )
 
 var sqsClient *sqs.Client
-var queueURL = os.Getenv("SQS_QUEUE_URL")
 
 // SendPrintRequest sends a print job request to SQS
 func SendPrintRequest(customerEmail, photoID, processedS3Location string) error {
+
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("failed to load .env", err)
+	}
+
+	// Load sqs url
+	queueURL := os.Getenv("SQS_QUEUE_URL")
 
 	// Load AWS config
 	config, err := config.LoadDefaultConfig(context.TODO())
@@ -37,16 +52,24 @@ func SendPrintRequest(customerEmail, photoID, processedS3Location string) error 
 	}
 
 	// Send message to SQS
-	_, err = client.SendMessage(context.Background(), &sqs.SendMessageInput{
-		QueueUrl:     aws.String(queueURL),
-		MessageBody:  aws.String(string(jobBytes)),
-		DelaySeconds: 5,
-	})
+	// implement retry logic
+	var previousError error
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		_, err = client.SendMessage(context.Background(), &sqs.SendMessageInput{
+			QueueUrl:    aws.String(queueURL),
+			MessageBody: aws.String(string(jobBytes)),
+			// DelaySeconds: 5,
+		})
 
-	if err != nil {
-		log.Printf("Failed to send print request to SQS: %v", err)
+		if err == nil {
+			log.Printf("Successfully sent print request to SQS for photos %s (attemtp - %d)", photoID, attempt+1)
+			break
+		}
+
+		previousError = err
+		log.Printf("Failed to send print request (attempt %d): %v", attempt+1, err)
+		time.Sleep(retryDelay)
 	}
 
-	log.Println("Print request sent to SQS", photoID)
-	return err
+	return fmt.Errorf("failed to send print request after %d attempts: %w", maxRetries, previousError)
 }

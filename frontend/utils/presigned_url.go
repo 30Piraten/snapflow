@@ -3,6 +3,7 @@ package utils
 import (
 	"context"
 	"fmt"
+	"log"
 	"mime/multipart"
 	"os"
 	"time"
@@ -46,7 +47,7 @@ func GeneratePresignedURL(order *PhotoOrder) (*PresignedURLResponse, error) {
 	folderKey := fmt.Sprintf("%s/%s", order.FullName, orderID)
 
 	// Insert metadata into DynamoDB
-	err := cfg.InsertMetadata(order.FullName, order.Email, orderID, uploadTimestamp)
+	err := cfg.InsertMetadata(order.FullName, order.Email, order.PaperType, order.Size, orderID, uploadTimestamp)
 	if err != nil {
 		return nil, fmt.Errorf("failed to insert metadata into DynamoDB: %v", err)
 	}
@@ -88,23 +89,22 @@ func GeneratePresignedURL(order *PhotoOrder) (*PresignedURLResponse, error) {
 		presignedURLs = append(presignedURLs, presignedPut.URL)
 	}
 
-	// Generate a single signed URL for the entire folder via CloudFront
-	// folderSignedURL, err := cfg.GenerateSignedURL(folderKey)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("failed to generate signed URL for folder: %v", err)
-	// }
-
-	// Print signed url
-	// log.Printf("SIGNED URL: %s", folderSignedURL)
+	// Send SQS print job
+	err = cfg.SendPrintRequest(order.Email, orderID, order.Location)
+	if err != nil {
+		return nil, fmt.Errorf("failed to send SQS print job: %v", err)
+	}
 
 	// Send notification via SNS after signed URL is generated
-	// err = cfg.ProcessedPhotoHandler(order.Email, orderID, order.FullName)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("failed to send notification via SNS: %v", err)
-	// }
+	err = cfg.ProcessedPhotoHandler(order.Email, orderID, order.FullName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to send notification via SNS: %v", err)
+	}
+
+	log.Printf("Values from presignedURL: %s : %s", order.FullName, order.Location)
 
 	return &PresignedURLResponse{
-		URL:     presignedURLs[0],
+		URL:     folderKey,
 		OrderID: orderID,
 	}, nil
 }

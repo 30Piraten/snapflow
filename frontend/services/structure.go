@@ -18,6 +18,12 @@ type PhotoOrder struct {
 	Photos    []*multipart.FileHeader `json:"photos"`
 }
 
+type PrintJob struct {
+	CustomerEmail       string `json:"customer_email"`
+	PhotoID             string `json:"photo_id"`
+	ProcessedS3Location string `json:"processed_s3_location"`
+}
+
 // image.go file definition
 // Quality settings for image processing
 const (

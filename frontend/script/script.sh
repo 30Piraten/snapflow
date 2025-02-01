@@ -7,7 +7,7 @@ cd ../lambda
 rm -f bootstrap dummyprinter.zip
 
 # Compile Lambda function and name the output "bootstrap"
-GOOS=linux GOARCH=amd64 go CGO_ENABLED=0 build -o bootstrap lambda.go
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bootstrap lambda.go
 
 # Make "bootstrap" executable (Important!)
 chmod +x bootstrap

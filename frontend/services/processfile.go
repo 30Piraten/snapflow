@@ -16,8 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
-var printjob cfg.PrintJob
-
 // ProcessFile validates and processes a single file. It takes a multipart.FileHeader
 // and options for image processing. It first validates the file for security, then
 // opens the file and reads its data. Afterwards it checks if the file is above the target
@@ -27,6 +25,9 @@ var printjob cfg.PrintJob
 // size of the original file. If an error occurs during processing, it returns a
 // ProcessingError with the appropriate code and message.
 func ProcessFile(file *multipart.FileHeader, opts ProcessingOptions, order PhotoOrder) FileProcessingResult {
+	region := os.Getenv("AWS_REGION")
+	bucketName := os.Getenv("BUCKET_NAME")
+
 	// Open the file
 	source, err := file.Open()
 	if err != nil {
@@ -66,8 +67,6 @@ func ProcessFile(file *multipart.FileHeader, opts ProcessingOptions, order Photo
 	}
 
 	////////////////////////////////////////////////////////////////////
-	region := os.Getenv("AWS_REGION")
-	bucketName := os.Getenv("BUCKET_NAME")
 
 	// Initialise S3 Client
 	config, err := config.LoadDefaultConfig(context.TODO())
@@ -78,7 +77,7 @@ func ProcessFile(file *multipart.FileHeader, opts ProcessingOptions, order Photo
 
 	// Here we generate a unique file path in S3 under user's folder
 	uniqueFileName := generateUniqueFileName(file.Filename)
-	s3key := fmt.Sprintf("uploads/%s/%s", order.FullName, uniqueFileName)
+	s3key := fmt.Sprintf("uploads/%s", uniqueFileName) // -> order.FullName
 
 	// Convert processedImage to []byte
 	var buf bytes.Buffer
@@ -106,22 +105,10 @@ func ProcessFile(file *multipart.FileHeader, opts ProcessingOptions, order Photo
 		}
 	}
 
-	// Simulate PrintJob -> TODO: CHECK AGAIN IF TO USE order.Photo, etc, instead
-	// err = handlers.InitiatePrintJob(printjob.CustomerEmail, printjob.PhotoID, printjob.ProcessedS3Location)
-	// if err != nil {
-	// 	return FileProcessingResult{
-	// 		Error: &ProcessingError{
-	// 			Type:    "PrintJobError",
-	// 			Code:    ErrCodeProcessingFailed,
-	// 			Message: fmt.Sprintf("failed to initiate print job: %v", err),
-	// 		},
-	// 	}
-	// }
-	////////////////////////////////////////////////////////////////////
-
 	return FileProcessingResult{
 		Path:     s3key, // <- Changed the name from s3Path to s3Key
 		Filename: file.Filename,
 		Size:     file.Size,
 	}
+
 }

@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
-	"github.com/joho/godotenv"
 )
 
 type SQSEvent struct {
@@ -65,21 +64,21 @@ func SimulatedPrint(job PrintJob) {
 
 // Process a single print job
 func ProcessPrintJob(ctx context.Context, job PrintJob) error {
-	// Load .env files
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("❌ unable to load .env file: %v", err)
-	}
+	// // Load .env files
+	// err := godotenv.Load()
+	// if err != nil {
+	// 	log.Fatalf("❌ unable to load .env file: %v", err)
+	// }
 
 	// Access .env variables
 	tableName := os.Getenv("DYNAMODB_TABLE_NAME")
-	snsTopicArn := os.Getenv("SNS_TPOIC_ARN")
+	snsTopicArn := os.Getenv("SNS_TOPIC_ARN")
 
 	// Simulate printing -> addd 5 seconds delay here
 	SimulatedPrint(job)
 
 	// Update DynamoDB status
-	_, err = dynamoClient.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+	_, err := dynamoClient.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 		TableName: aws.String(tableName),
 		Key: map[string]types.AttributeValue{
 			"customer_email": &types.AttributeValueMemberS{
@@ -118,7 +117,7 @@ func ProcessPrintJob(ctx context.Context, job PrintJob) error {
 	return nil
 }
 
-func Handler(ctx context.Context, event SQSEvent) error { // Add the error return
+func Handler(ctx context.Context, event SQSEvent) error {
 	var printJob PrintJob
 
 	if snsClient == nil || dynamoClient == nil {
@@ -127,26 +126,22 @@ func Handler(ctx context.Context, event SQSEvent) error { // Add the error retur
 
 	for _, record := range event.Records {
 		err := json.Unmarshal([]byte(record.Body), &printJob)
-
 		if err != nil {
-			log.Printf("❌ failed to unmarshal SQS message: %v", err) // More specific message
-			continue                                                 // Important: Continue to the next message
+			log.Printf("❌ failed to unmarshal SQS message: %v", err)
+			continue
 		}
 
 		// Process the job
-		if err := ProcessPrintJob(ctx, printJob); err != nil { // Check for errors
+		if err := ProcessPrintJob(ctx, printJob); err != nil {
 			log.Printf("❌ Error processing print job: %v", err)
-			// Important: Decide how you want to handle errors.
-			// Options:
-			// 1. Continue to the next message (like below)
-			// 2. Return the error to stop processing and cause a retry
-			continue // Continue to the next message
+			continue
 		}
 	}
 
-	return nil // Return nil if all messages were processed (even with some errors)
+	return nil
 }
 
 func main() {
+	InitAWS()
 	lambda.Start(Handler)
 }

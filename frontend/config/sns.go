@@ -99,19 +99,6 @@ func ProcessedPhotoHandler(customerEmail, orderID, customerName string) error {
 		}
 	}
 
-	// // Generate a single signed URL for the folder
-	// folderPath := fmt.Sprintf("https://%s/%s/%s", cloudFrontDomain, customerName, orderID)
-
-	// // Generate the signed URL for the entire folder -> TODO: CHANGE!
-	// signedURL, err := GenerateSignedURL(folderPath)
-	// if err != nil {
-	// 	log.Printf("failed to generate signed URL for order %s: %v", orderID, err)
-	// 	return err
-	// }
-
-	// // Send a single notification
-	// return SendNotification(customerEmail, orderID, signedURL)
-
 	return nil
 }
 
@@ -126,10 +113,6 @@ func SendNotification(customerEmail string, message []byte) error {
 
 	// Get .env variables
 	snsTopicArn := os.Getenv("SNS_TOPIC_ARN")
-
-	// Delay sending SNS notification for 10 secs
-	log.Println("Delaying SNS notification for 10 seconds...")
-	time.Sleep(10 * time.Second)
 
 	// message := "Your photo is ready! You can download it from the following link: " + signedURL
 
