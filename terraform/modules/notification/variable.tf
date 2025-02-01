@@ -1,3 +1,3 @@
-variable "lambda_execution_role" {
+variable "lambda_execution_role_arn" {
   type = string 
 }

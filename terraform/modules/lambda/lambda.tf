@@ -19,7 +19,9 @@ resource "aws_lambda_function" "dummy_print_service" {
   environment {
     variables = {
       SQS_QUEUE_URL = var.sqs_queue_url
+      SNS_TOPIC_ARN = var.sns_topic_arn
       DYNAMODB_TABLE = var.dynamodb_table_name 
+      AWS_LAMBDA_EXEC_WRAPPER = "/opt/bootstrap"
     }
   }
 }

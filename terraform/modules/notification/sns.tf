@@ -17,7 +17,7 @@ data "aws_iam_policy_document" "sns_policy" {
     ]
     principals {
       type        = "AWS"
-      identifiers = [var.lambda_execution_role]
+      identifiers = [var.lambda_execution_role_arn]
       #["arn:aws:iam::${data.aws_caller_identity.account_id.account_id}:role/lambda_execution_role"]
     }
     resources = [aws_sns_topic.topic.arn]
