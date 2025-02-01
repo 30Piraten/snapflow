@@ -14,3 +14,4 @@ docs/mainproject.md
 
 /docs/*
 /frontend/config/cloudfront.go
+/tmp

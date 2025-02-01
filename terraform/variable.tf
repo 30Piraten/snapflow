@@ -36,12 +36,6 @@ variable "billing_mode" {
   default = "PAY_PER_REQUEST"
 }
 
-# CLOUDFRONT DISTRIBUTION DEFINITION
-variable "logging_bucket" {
-  type    = string
-  default = "snapflow-cloudfront-logs"  
-}
-
 # SQS QUEUE DEFINITION
 variable "max_message_size" {
   type    = number
@@ -67,6 +61,3 @@ variable "queue_name" {
   type    = string
   default = "snapflow-photo-print-queue"
 }
-
-
-# SNS / SES DEFINITION
