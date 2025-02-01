@@ -34,6 +34,16 @@ resource "aws_dynamodb_table" "customer_data_table" {
   }
 
   attribute {
+    name = "photo_size"
+    type = "S"
+  }
+
+  attribute {
+    name = "paper_type"
+    type = "S"
+  }
+
+  attribute {
     name = "processed_location"
     type = "S"
   }
@@ -63,6 +73,18 @@ resource "aws_dynamodb_table" "customer_data_table" {
   global_secondary_index {
     name = "CustomerNameIndex"
     hash_key = "customer_name"
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    name = "PhotoSizeIndex"
+    hash_key = "photo_size"
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    name = "PapeType"
+    hash_key = "paper_type"
     projection_type = "ALL"
   }
 

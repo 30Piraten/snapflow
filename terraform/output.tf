@@ -13,3 +13,7 @@ output "sns_topic_arn" {
 output "sqs_queue_url" {
   value = module.sqs.sqs_queue_url
 }
+
+output "sqs_queue_url_id" {
+  value = module.sqs.sqs_queue_url_id
+}

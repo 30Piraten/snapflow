@@ -24,6 +24,7 @@ resource "aws_iam_policy" "lambda_sqs_queue" {
 data "aws_iam_policy_document" "sqs_role_policy" {
   statement {
     actions = [ 
+        "sqs:SendMessage",
         "sqs:ReceiveMessage",
         "sqs:DeleteMessage",
         "sqs:GetQueueAttributes"

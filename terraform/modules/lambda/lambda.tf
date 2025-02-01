@@ -4,6 +4,8 @@
 #   }
 # }
 
+data "aws_caller_identity" "account" {}
+
 resource "aws_lambda_function" "dummy_print_service" {
   function_name = "dummyPrinter"
   filename = "../frontend/lambda/dummyprinter.zip"
@@ -11,7 +13,7 @@ resource "aws_lambda_function" "dummy_print_service" {
   handler = "bootstrap"
   runtime = "provided.al2"
   role = aws_iam_role.lambda_exec_role.arn 
-  # timeout = 60
+  timeout = 60
   memory_size = 128
 
   # depends_on = [ null_resource.build_lambda ]
@@ -20,7 +22,8 @@ resource "aws_lambda_function" "dummy_print_service" {
     variables = {
       SQS_QUEUE_URL = var.sqs_queue_url
       SNS_TOPIC_ARN = var.sns_topic_arn
-      DYNAMODB_TABLE = var.dynamodb_table_name 
+      # SNS_TOPIC_ARN = "arn:aws:sns:us-east-1:${data.aws_caller_identity.account.account_id}:snapflow"
+      DYNAMODB_TABLE_NAME = var.dynamodb_table_name 
       AWS_LAMBDA_EXEC_WRAPPER = "/opt/bootstrap"
     }
   }

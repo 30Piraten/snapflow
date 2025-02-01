@@ -24,6 +24,7 @@ resource "aws_iam_policy" "lambda_policy" {
 data "aws_iam_policy_document" "lambda_policy_document" {
   statement {
     actions = [ 
+      "sqs:SendMessage",
       "sqs:ReceiveMessage",
       "sqs:DeleteMessage",
       "sqs:GetQueueAttributes"
@@ -31,10 +32,10 @@ data "aws_iam_policy_document" "lambda_policy_document" {
      resources = [ var.sqs_queue_arn ]
   }
 
-  # statement {
-  #   actions = [ "sns:Publish" ]
-  #   resources = [var.sns_topic_arn]
-  # }
+  statement {
+    actions = [ "sns:Publish" ]
+    resources = [var.sns_topic_arn]
+  }
 
   statement {
     actions = ["dynamodb:UpdateItem"]

@@ -22,10 +22,10 @@ module "dynamodb" {
 #   logging_bucket = var.logging_bucket
 # }
 
-# module "notification" {
-#   source = "./modules/notification"
-#   lambda_execution_role = module.lambda.lambda_execution_role
-# }
+module "notification" {
+  source = "./modules/notification"
+  lambda_execution_role_arn = module.lambda.lambda_execution_role_arn
+}
 
 module "sqs" {
   source = "./modules/sqs"
@@ -44,4 +44,5 @@ module "lambda" {
   sqs_queue_arn = module.sqs.sqs_queue_arn
   dynamodb_table_name = module.dynamodb.dynamodb_table_name
   sqs_queue_url = module.sqs.sqs_queue_url
+  sns_topic_arn = module.notification.sns_topic_arn
 }
