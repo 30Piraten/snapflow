@@ -12,5 +12,5 @@ docs/mainproject.md
 *.csv
 /keys/*
 
-/docs/query.txt
+/docs/*
 /frontend/config/cloudfront.go
