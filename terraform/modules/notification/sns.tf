@@ -15,20 +15,16 @@ data "aws_iam_policy_document" "sns_policy" {
     actions = [
       "SNS:Publish",
     ]
-
     principals {
       type        = "AWS"
-      identifiers = [
-        "arn:aws:iam::${data.aws_caller_identity.account_id.account_id}:role/lambda_execution_role"
-      ]
+      identifiers = [var.lambda_execution_role]
+      #["arn:aws:iam::${data.aws_caller_identity.account_id.account_id}:role/lambda_execution_role"]
     }
-
     resources = [aws_sns_topic.topic.arn]
-
-    condition {
-      test     = "StringEquals"
-      variable = "AWS:SourceOwner"
-      values   = [data.aws_caller_identity.account_id.account_id]
-    }
+    # condition {
+    #   test     = "StringEquals"
+    #   variable = "AWS:SourceOwner"
+    #   values   = [data.aws_caller_identity.account_id.account_id]
+    # }
   }
 }

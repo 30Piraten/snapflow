@@ -5,3 +5,7 @@ output "sqs_queue_url" {
 output "sqs_event_source_arn" {
   value = aws_sqs_queue.print_queue.arn 
 }
+
+output "sqs_queue_arn" {
+  value = aws_sqs_queue.print_queue.arn 
+}
