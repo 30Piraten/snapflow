@@ -50,7 +50,7 @@ variable "max_message_size" {
 
 variable "delay_seconds" {
   type    = number
-  default = 5
+  default = 0
 }
 
 variable "message_retention_seconds" {
@@ -60,10 +60,13 @@ variable "message_retention_seconds" {
 
 variable "visibility_timeout_seconds" {
   type    = number
-  default = 30
+  default = 60
 }
 
 variable "queue_name" {
   type    = string
   default = "snapflow-photo-print-queue"
 }
+
+
+# SNS / SES DEFINITION
