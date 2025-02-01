@@ -6,17 +6,14 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
-	"github.com/joho/godotenv"
 )
 
-func init() {
-	InitCloudFront()
+func Init() {
 
 	// Set up SNS client
 	config, err := config.LoadDefaultConfig(context.TODO())
@@ -28,105 +25,39 @@ func init() {
 	s3Client = s3.NewFromConfig(config)
 }
 
-// Get photo file names from S3
-func getPhotoFileNamesFromS3(customerName, orderID string) ([]string, error) {
-	prefix := fmt.Sprintf("%s/%s/", customerName, orderID)
-	var fileNames []string
-
-	paginator := s3.NewListObjectsV2Paginator(s3Client, &s3.ListObjectsV2Input{
-		Bucket: aws.String(os.Getenv("BUCKET_NAME")),
-		Prefix: aws.String(prefix),
-	})
-
-	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(context.TODO())
-		if err != nil {
-			return nil, fmt.Errorf("listing objects: %w", err)
-		}
-
-		for _, obj := range page.Contents {
-			key := *obj.Key
-			// Extract the filename (after the prefix)
-			fileName := key[len(prefix):]
-			fileNames = append(fileNames, fileName)
-		}
-	}
-
-	return fileNames, nil
+type NotificationMessage struct {
+	Subject string `json:"subject"`
+	Body    string `json:"body"`
 }
 
-// / Modified
-func ProcessedPhotoHandler(customerEmail, orderID, customerName string) error {
+func SendSNSNotification(photoID, email string) error {
+	Init()
 
-	// Get photo filenames
-	photoFileNames, err := getPhotoFileNamesFromS3(customerEmail, orderID)
-	if err != nil {
-		return fmt.Errorf("getting photo filenames: %w", err)
-	}
-
-	if len(photoFileNames) == 0 {
-		log.Println("No photos found for this order")
-	}
-
-	for _, photoFileName := range photoFileNames {
-		objectKey := fmt.Sprintf("%s/%s/%s", customerName, orderID, photoFileName)
-		expires := time.Now().Add(5 * time.Minute).Unix()
-
-		policy := fmt.Sprintf(`{
-			"Statement":[{
-				"Resource":"https://%s/%s", 
-				"Condition":{"DateLessThan":{"AWS:EpochTime":%d}}}]
-		}`, cloudFrontDomain, objectKey, expires)
-
-		signedInfo := SignedURLInfo{
-			CloudFrontDomain: cloudFrontDomain,
-			ObjectKey:        objectKey,
-			Expires:          expires,
-			KeyPairID:        keyPairID,
-			Policy:           policy,
-			CustomerName:     customerName,
-			OrderID:          orderID,
-		}
-
-		message, err := json.Marshal(signedInfo)
-		if err != nil {
-			return fmt.Errorf("marshaling signed URL info: %w", err)
-		}
-
-		err = SendNotification(customerEmail, message)
-		if err != nil {
-			return fmt.Errorf("sending via SNS: %w", err)
-		}
-	}
-
-	return nil
-}
-
-// removed photoIDs & signedURL -> review!
-// SendNotification sends a notification with the signed URL
-func SendNotification(customerEmail string, message []byte) error {
-	// Load .env file
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("failed to load .env file: %v", err)
-	}
-
-	// Get .env variables
+	// Replace with your actual SNS topic ARN
 	snsTopicArn := os.Getenv("SNS_TOPIC_ARN")
 
-	// message := "Your photo is ready! You can download it from the following link: " + signedURL
+	// Create message payload
+	message := NotificationMessage{
+		Subject: "Print Job Completed",
+		Body:    fmt.Sprintf("Your photo print job (%s) has been completed successfully!", photoID),
+	}
 
-	// Send SNS message to the email endpoint
-	_, err = snsClient.Publish(context.TODO(), &sns.PublishInput{
-		Message:  aws.String(string(message)),
-		Subject:  aws.String("Your photo is ready!"),
+	msgBytes, err := json.MarshalIndent(message, "", "  ")
+	messageString := string(msgBytes)
+	fmt.Println("DEBUG: SQS Message ->", string(msgBytes))
+
+	// Publish to SNS
+	resp, err := snsClient.Publish(context.TODO(), &sns.PublishInput{
 		TopicArn: aws.String(snsTopicArn),
+		Message:  aws.String(messageString),
+		Subject:  aws.String("Print Job Completed"),
 	})
 
 	if err != nil {
-		log.Printf("failed to send SNS notification message to %s: %v", customerEmail, err)
+		log.Printf("❌ Failed to send SNS notification: %v", err)
 		return err
 	}
 
+	log.Printf("✅ SNS Notification sent! Message ID: %s", *resp.MessageId)
 	return nil
 }

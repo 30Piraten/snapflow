@@ -56,9 +56,9 @@ func SendPrintRequest(customerEmail, photoID, processedS3Location string) error 
 	var previousError error
 	for attempt := 0; attempt < maxRetries; attempt++ {
 		_, err = client.SendMessage(context.Background(), &sqs.SendMessageInput{
-			QueueUrl:    aws.String(queueURL),
-			MessageBody: aws.String(string(jobBytes)),
-			// DelaySeconds: 5,
+			QueueUrl:     aws.String(queueURL),
+			MessageBody:  aws.String(string(jobBytes)),
+			DelaySeconds: 5,
 		})
 
 		if err == nil {

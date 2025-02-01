@@ -64,11 +64,6 @@ func SimulatedPrint(job PrintJob) {
 
 // Process a single print job
 func ProcessPrintJob(ctx context.Context, job PrintJob) error {
-	// // Load .env files
-	// err := godotenv.Load()
-	// if err != nil {
-	// 	log.Fatalf("❌ unable to load .env file: %v", err)
-	// }
 
 	// Access .env variables
 	tableName := os.Getenv("DYNAMODB_TABLE_NAME")
