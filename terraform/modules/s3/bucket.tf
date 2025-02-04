@@ -8,25 +8,17 @@
 # So, the use of lifecyle rule is required to delete or remove photos
 # once a confirmation via SES is sent to the user
 
-# resource "random_id" "id" {
-#   byte_length = 8
-# }
-
 resource "aws_s3_bucket" "processed_image_bucket" {
   bucket = var.bucket_name
-
   force_destroy = var.force_destroy
-
   tags = {
     Name        = var.bucket_name
-    Environment = "Production"
+    Environment = var.environment
   }
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "processedS3_bucket_lifecycle" {
-  
   bucket = aws_s3_bucket.processed_image_bucket.id 
-
   rule {
     id = "expired-processed-photos"
     expiration {
@@ -39,7 +31,6 @@ resource "aws_s3_bucket_lifecycle_configuration" "processedS3_bucket_lifecycle" 
 
 resource "aws_s3_bucket_public_access_block" "processed_bucket_block" {
   bucket = aws_s3_bucket.processed_image_bucket.id
-
   block_public_acls       = true
   block_public_policy     = true
   ignore_public_acls      = true
@@ -48,7 +39,6 @@ resource "aws_s3_bucket_public_access_block" "processed_bucket_block" {
 
 resource "aws_s3_bucket_versioning" "processed_bucket_version" {
   bucket = aws_s3_bucket.processed_image_bucket.id
-
   versioning_configuration {
     status = "Enabled"
   }
@@ -56,32 +46,11 @@ resource "aws_s3_bucket_versioning" "processed_bucket_version" {
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "processedS3_bucket_sse" {
   bucket = aws_s3_bucket.processed_image_bucket.id
-
-
   rule {
     apply_server_side_encryption_by_default {
       kms_master_key_id = aws_kms_key.processed_kms_sse.id
       sse_algorithm     = "aws:kms"
     }
   }
-}
-
-# Target for CloudFront Signed URL
-resource "aws_s3_bucket_policy" "processed_bucket_policy" {
-  bucket = aws_s3_bucket.processed_image_bucket.id 
-  
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-        {
-            Effect = "Allow",
-            Principal = {
-                Service = "lambda.amazonaws.com"
-            }
-            Action = ["S3:GetObject", "s3:PutObject"]
-            Resource = "arn:aws:s3:::${aws_s3_bucket.processed_image_bucket.id}/*"
-        }
-    ]
-  })
 }
 

@@ -21,3 +21,7 @@ variable "queue_name" {
 variable "lambda_exec_role_name" {
   type = string 
 }
+
+variable "sqs_policy_description" {
+  type = string 
+}

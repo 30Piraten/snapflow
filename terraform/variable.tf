@@ -3,6 +3,10 @@ variable "region" {
   default = "us-east-1"
 }
 
+variable "environment" {
+  type = string 
+  default = "Production"
+}
 
 # S3 BUCKET DEFINITION
 variable "force_destroy" {
@@ -60,4 +64,41 @@ variable "visibility_timeout_seconds" {
 variable "queue_name" {
   type    = string
   default = "snapflow-photo-print-queue"
+}
+
+variable "sqs_policy_description" {
+  type = string 
+  default = "SQS-Lambda policy"
+}
+
+# SNS CONFIG DEFINITION
+variable "sns_topic_name" {
+  type = string
+  default = "snapflowSNSTopic"
+}
+
+variable "sns_lambda_policy_name" {
+  type = string 
+  default = "snsLambdaPolicy"
+}
+
+variable "sns_policy_description" {
+  type = string 
+  default = "SNS-Lambda policy"
+}
+
+# SES CONFIG DEFINITION
+variable "ses_email" {
+  type = string 
+  default = "kioyarautenberg@gmail.com"
+}
+
+variable "ses_policy_name" {
+  type = string 
+  default = "sesSnapflowPolicy"
+}
+
+variable "ses_policy_description" {
+  type = string 
+  default = "SES Policy for sending emails"
 }
