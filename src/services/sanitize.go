@@ -2,9 +2,9 @@ package services
 
 import "strings"
 
-// SanitizeFolderConstruct sanitizes a string to be used as a folder name
-// in the S3. It replaces spaces and other unsafe characters with underscore
-func SanitizeFolder(folderName string) string {
+// Sanitize sanitizes a stringIt replaces spaces and
+// other unsafe characters with underscore
+func Sanitize(folderName string) string {
 	// Replace spaces with underscore
 	folderName = strings.ReplaceAll(folderName, " ", "_")
 

@@ -35,7 +35,7 @@ type PhotoOrder struct {
 // FileProcessingResult containing the path of the saved image, the filename and
 // size of the original file. If an error occurs during processing, it returns a
 // ProcessingError with the appropriate code and message.
-func ProcessFile(file *multipart.FileHeader, opts ProcessingOptions, order PhotoOrder) FileProcessingResult {
+func ProcessFile(file *multipart.FileHeader, opts ProcessingOptions, order *PhotoOrder) FileProcessingResult {
 	region := os.Getenv("AWS_REGION")
 	bucketName := os.Getenv("BUCKET_NAME")
 
@@ -87,7 +87,7 @@ func ProcessFile(file *multipart.FileHeader, opts ProcessingOptions, order Photo
 	s3Client := s3.NewFromConfig(config)
 
 	// Construct the the S3 key with the user's folder and date
-	userFolder := SanitizeFolder(order.FullName)
+	userFolder := Sanitize(order.FullName)
 	uploadDate := time.Now().Format("jan_02")
 	uniqueFileName := generateUniqueFileName(file.Filename)
 	s3key := path.Join("uploads", userFolder, uploadDate, uniqueFileName)
@@ -118,9 +118,12 @@ func ProcessFile(file *multipart.FileHeader, opts ProcessingOptions, order Photo
 		}
 	}
 
+	log.Printf("foldername: %s", userFolder)
+
 	return FileProcessingResult{
 		Path:     s3key, // <- Changed the name from s3Path to s3Key
 		Filename: file.Filename,
 		Size:     file.Size,
 	}
+
 }
