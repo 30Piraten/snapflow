@@ -3,15 +3,16 @@ package config
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
-	"github.com/joho/godotenv"
 )
 
 const (
@@ -23,23 +24,14 @@ var sqsClient *sqs.Client
 
 // SendPrintRequest sends a print job request to SQS
 func SendPrintRequest(customerEmail, photoID, processedS3Location string) error {
-
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("failed to load .env", err)
-	}
-
-	// Load sqs url
 	queueURL := os.Getenv("SQS_QUEUE_URL")
 
-	// Load AWS config
-	config, err := config.LoadDefaultConfig(context.TODO())
+	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion("us-east-1")) // Explicit region
 	if err != nil {
-		log.Fatal("failed to load configuration, ", err)
+		log.Fatal("failed to load configuration: ", err)
 	}
-	client := sqs.NewFromConfig(config)
+	client := sqs.NewFromConfig(cfg)
 
-	// Create message structure for SQS
 	job := PrintJob{
 		CustomerEmail:       customerEmail,
 		PhotoID:             photoID,
@@ -48,26 +40,46 @@ func SendPrintRequest(customerEmail, photoID, processedS3Location string) error 
 
 	jobBytes, err := json.Marshal(job)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to marshal print job: %w", err)
 	}
 
-	// Send message to SQS
-	// implement retry logic
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second) // 10-second timeout
+	defer cancel()
+
 	var previousError error
 	for attempt := 0; attempt < maxRetries; attempt++ {
-		_, err = client.SendMessage(context.Background(), &sqs.SendMessageInput{
+		output, err := client.SendMessage(ctx, &sqs.SendMessageInput{
 			QueueUrl:     aws.String(queueURL),
 			MessageBody:  aws.String(string(jobBytes)),
 			DelaySeconds: 5,
 		})
 
 		if err == nil {
-			log.Printf("Successfully sent print request to SQS for photos %s (attemtp - %d)", photoID, attempt+1)
-			break
+			log.Printf("Successfully sent print request to SQS for photos %s (attempt %d), Output: %+v", photoID, attempt+1, output)
+			return nil // Success!
 		}
 
-		previousError = err
-		log.Printf("Failed to send print request (attempt %d): %v", attempt+1, err)
+		// tautological condition spoted -> err != nil
+		if previousError != nil {
+			// Log the original error
+			log.Printf("Original error: %v", err)
+
+			// Try to unwrap the error (Go 1.13 and later)
+			if unwrappedErr := errors.Unwrap(err); unwrappedErr != nil {
+				log.Printf("Unwrapped error: %v", unwrappedErr)
+
+				// Check if it's a net.Error (for network issues)
+				if netErr, ok := unwrappedErr.(net.Error); ok {
+					log.Printf("Network error: %v, Timeout: %v", netErr, netErr.Timeout())
+				}
+			}
+			previousError = err // Capture the error
+			log.Printf("Failed to send print request (attempt %d): %v", attempt+1, err)
+		} else {
+			log.Printf("SendMessage returned nil error, but failed (attempt %d)", attempt+1)
+			previousError = fmt.Errorf("SendMessage returned nil error") // Create a placeholder error
+		}
+
 		time.Sleep(retryDelay)
 	}
 

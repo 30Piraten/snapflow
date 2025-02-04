@@ -6,7 +6,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/aws/aws-sdk-go-v2/service/sns"
 )
 
 // PrintJob represents a print request
@@ -22,7 +21,6 @@ var printJob *PrintJob
 // AWS Clients
 var (
 	dynamoClient *dynamodb.Client
-	snsClient    *sns.Client
 	s3Client     *s3.Client
 )
 
