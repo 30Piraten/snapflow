@@ -1,3 +1,7 @@
+variable "region" {
+  type = string 
+}
+
 variable "ses_email" {
   type = string 
 }

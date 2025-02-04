@@ -35,6 +35,7 @@ module "sns" {
 
 module "ses" {
   source = "./modules/ses"
+  region = var.region
   ses_email = var.ses_email
   ses_policy_name = var.ses_policy_name
   ses_policy_description = var.ses_policy_description

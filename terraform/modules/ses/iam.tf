@@ -1,9 +1,13 @@
+data "aws_caller_identity" "account" {}
+
 data "aws_iam_policy_document" "ses_policy_document" {
     statement {
       actions = [
         "ses:SendEmail",
       ]
-      resources = [ aws_ses_email_identity.ses_email.arn ]
+      resources = [ 
+        "arn:aws:ses:${var.region}:${data.aws_caller_identity.account.account_id}:identity:/${var.ses_email}",
+       ]
     }
 }
 
@@ -15,5 +19,5 @@ resource "aws_iam_policy" "ses_policy" {
 
 resource "aws_iam_role_policy_attachment" "ses_policy_attachment" {
   role = var.lambda_exec_role_name 
-  policy_arn = aws_ses_email_identity.ses_email.arn 
+  policy_arn = aws_iam_policy.ses_policy.arn  
 }
