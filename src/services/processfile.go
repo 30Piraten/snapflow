@@ -9,12 +9,23 @@ import (
 	"log"
 	"mime/multipart"
 	"os"
+	"path"
+	"time"
 
 	cfg "github.com/30Piraten/snapflow/config"
 	"github.com/30Piraten/snapflow/utils"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
+
+type PhotoOrder struct {
+	FullName  string                  `json:"fullName"`
+	Location  string                  `json:"location"`
+	Size      string                  `json:"size"`
+	PaperType string                  `json:"paperType"`
+	Email     string                  `json:"email"`
+	Photos    []*multipart.FileHeader `json:"photos"`
+}
 
 // ProcessFile validates and processes a single file. It takes a multipart.FileHeader
 // and options for image processing. It first validates the file for security, then
@@ -75,9 +86,11 @@ func ProcessFile(file *multipart.FileHeader, opts ProcessingOptions, order Photo
 	}
 	s3Client := s3.NewFromConfig(config)
 
-	// Here we generate a unique file path in S3 under user's folder
+	// Construct the the S3 key with the user's folder and date
+	userFolder := SanitizeFolder(order.FullName)
+	uploadDate := time.Now().Format("jan_02")
 	uniqueFileName := generateUniqueFileName(file.Filename)
-	s3key := fmt.Sprintf("uploads/%s", uniqueFileName) // -> order.FullName
+	s3key := path.Join("uploads", userFolder, uploadDate, uniqueFileName)
 
 	// Convert processedImage to []byte
 	var buf bytes.Buffer
@@ -110,5 +123,4 @@ func ProcessFile(file *multipart.FileHeader, opts ProcessingOptions, order Photo
 		Filename: file.Filename,
 		Size:     file.Size,
 	}
-
 }

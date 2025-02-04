@@ -51,7 +51,7 @@ func SendPrintRequest(customerEmail, photoID, processedS3Location string) error 
 		output, err := client.SendMessage(ctx, &sqs.SendMessageInput{
 			QueueUrl:     aws.String(queueURL),
 			MessageBody:  aws.String(string(jobBytes)),
-			DelaySeconds: 5,
+			DelaySeconds: 10,
 		})
 
 		if err == nil {
@@ -79,6 +79,8 @@ func SendPrintRequest(customerEmail, photoID, processedS3Location string) error 
 			log.Printf("SendMessage returned nil error, but failed (attempt %d)", attempt+1)
 			previousError = fmt.Errorf("SendMessage returned nil error") // Create a placeholder error
 		}
+		previousError = err // Capture the error
+		log.Printf("Failed to send print request (attempt %d): %v", attempt+1, err)
 
 		time.Sleep(retryDelay)
 	}

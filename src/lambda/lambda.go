@@ -96,6 +96,7 @@ func ProcessPrintJob(ctx context.Context, job PrintJob) error {
 		return err
 	}
 
+	time.Sleep(10 * time.Second)
 	// Send SNS notification
 	message := fmt.Sprintf("📣 Hello %s, your photo (ID: %s) had been printed and it is ready for pickup!", job.CustomerEmail, job.PhotoID)
 	_, err = snsClient.Publish(ctx, &sns.PublishInput{

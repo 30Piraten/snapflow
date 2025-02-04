@@ -44,7 +44,7 @@ func GeneratePresignedURL(order *PhotoOrder) (*PresignedURLResponse, error) {
 
 	orderID := uuid.New().String()
 	uploadTimestamp := time.Now().Unix()
-	folderKey := fmt.Sprintf("%s/%s", order.FullName, orderID)
+	folderKey := fmt.Sprintf("%s/%s", order.FullName, orderID) // -> Review
 
 	// Insert metadata into DynamoDB
 	err := cfg.InsertMetadata(order.FullName, order.Email, order.PaperType, order.Size, orderID, uploadTimestamp)
