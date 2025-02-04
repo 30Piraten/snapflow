@@ -7,7 +7,6 @@ import (
 	svc "github.com/30Piraten/snapflow/services"
 	"github.com/30Piraten/snapflow/utils"
 	"github.com/gofiber/fiber/v2"
-	"go.uber.org/zap"
 )
 
 // HandleOrderSubmission is the main entry point for the order submission process.
@@ -36,7 +35,7 @@ func HandleOrderSubmission(c *fiber.Ctx) error {
 	utils.Logger.Info("Starting order submission processing")
 
 	// Parse the order details
-	order, err := parseOrderDetails(c)
+	order, err := utils.ParseOrderDetails(c)
 	if err != nil {
 		return utils.HandleError(c, fiber.StatusBadRequest, "Failed to parse order details", err)
 	}
@@ -66,24 +65,24 @@ func HandleOrderSubmission(c *fiber.Ctx) error {
 	})
 }
 
-// parseOrderDetails parses the order details from the request body and validates
-// the required fields. If the parsing or validation fails, it returns an error.
-// If the parsing and validation succeed, it returns the parsed order details.
-func parseOrderDetails(c *fiber.Ctx) (*utils.PhotoOrder, error) {
-	order := new(utils.PhotoOrder)
-	if err := c.BodyParser(order); err != nil {
-		utils.Logger.Error("Form parsing failed", zap.Error(err))
-		return nil, err
-	}
+// // parseOrderDetails parses the order details from the request body and validates
+// // the required fields. If the parsing or validation fails, it returns an error.
+// // If the parsing and validation succeed, it returns the parsed order details.
+// func parseOrderDetails(c *fiber.Ctx) (*utils.PhotoOrder, error) {
+// 	order := new(utils.PhotoOrder)
+// 	if err := c.BodyParser(order); err != nil {
+// 		utils.Logger.Error("Form parsing failed", zap.Error(err))
+// 		return nil, err
+// 	}
 
-	// Validate required fields
-	if err := svc.ValidateOrder(c, order); err != nil {
-		return nil, err
-	}
+// 	// Validate required fields
+// 	if err := svc.ValidateOrder(c, order); err != nil {
+// 		return nil, err
+// 	}
 
-	utils.Logger.Info("Order details parsed successfully",
-		zap.String("fullName", order.FullName),
-		zap.String("email", order.Email))
+// 	utils.Logger.Info("Order details parsed successfully",
+// 		zap.String("fullName", order.FullName),
+// 		zap.String("email", order.Email))
 
-	return order, nil
-}
+// 	return order, nil
+// }
