@@ -1,6 +1,6 @@
-frontend/extras
+src/extras
 
-frontend/.env
+src/.env
 
 *.tfstate
 *.tfstate.backup
@@ -13,5 +13,5 @@ docs/mainproject.md
 /keys/*
 
 /docs/*
-/frontend/config/cloudfront.go
+/src/config/cloudfront.go
 /tmp
