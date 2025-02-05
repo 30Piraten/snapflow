@@ -5,13 +5,13 @@ import (
 	"os"
 	"time"
 
+	"github.com/30Piraten/snapflow/config"
 	"github.com/30Piraten/snapflow/routes"
 	"github.com/30Piraten/snapflow/utils"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/template/html/v2"
-	"github.com/joho/godotenv"
 )
 
 // Main configures the route for the Photo Upload service
@@ -20,7 +20,7 @@ func main() {
 	engine := html.New("./views", ".html")
 
 	// Enable template engine reloading in development
-	engine.Reload(true) // Enable this during development
+	engine.Reload(true) // -> Enabled during development
 	// Create a new Fiber app with the template engine
 	app := fiber.New(fiber.Config{
 		Views: engine,
@@ -32,10 +32,8 @@ func main() {
 		BodyLimit: 50 * 1024 * 1024, // 50MB
 	})
 
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Cannot load .env file")
-	}
+	// Load .env files
+	config.Env()
 
 	// Get PORT from .env
 	PORT := os.Getenv("PORT")
@@ -48,8 +46,8 @@ func main() {
 
 	// Enable CORS
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: "http://127.0.0.1:1234",
-		AllowMethods: "POST,OPTIONS",
+		AllowOrigins: os.Getenv("TRUSTED_ORIGIN"),
+		AllowMethods: os.Getenv("ALLOWED_METHODS"),
 	}))
 
 	app.Use(limiter.New(limiter.Config{
@@ -65,16 +63,8 @@ func main() {
 	// Register route
 	routes.Handler(app)
 
-	// Lambda handler
-	// lambda.Start(config.Handler)
-
 	// Setup static file serving if needed
 	app.Static("/public", "./public")
-
-	// Create uploads directory if it doesn't exist
-	if err := os.MkdirAll("./uploads", 0755); err != nil {
-		log.Fatal(err)
-	}
 
 	log.Fatal(app.Listen(":" + PORT))
 }
