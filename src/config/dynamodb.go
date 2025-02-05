@@ -14,6 +14,7 @@ import (
 
 var dynamoClient *dynamodb.Client
 
+// InitDynamoDB initializes the DynamoDB instance
 func InitDynamoDB() {
 	cfg, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
