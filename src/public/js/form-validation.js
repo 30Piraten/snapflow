@@ -1,5 +1,8 @@
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.querySelector('form');
+    // const spinnerContainer = document.getElementById('spinner-container');
+    // const actualSpinner = document.querySelector('.actual-spinner');
+
     if (form) {
         form.addEventListener('submit', async function(event) {
             event.preventDefault();
@@ -57,7 +60,13 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             // If client-side validation fails, stop submission
-            if (!isValid) return;
+            if (!isValid) {
+                return;
+            }
+
+              // Display spinner on form submission
+            //   spinnerContainer.classList.remove('spinner-hidden');
+            //   spinnerContainer.style.display = 'flex';
 
             // Create FormData
             const formData = new FormData(this);
@@ -65,9 +74,6 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 const response = await fetch('/submit-order', {
                     method: 'POST',
-                    // headers: {
-                    //     'Authorization': ""
-                    // },
                     body: formData
                 });
 
@@ -94,8 +100,17 @@ document.addEventListener('DOMContentLoaded', function() {
             } catch (error) {
                 console.error('Submission error:', error);
                 alert('Network error. Please try again.');
-            }
+            } 
+            // finally {
+            //     // Hide the spinner after processing
+            //     // spinnerContainer.classList.add('spinner-hidden')
+            // }
         });
     }
+    // spinner.addEventListener("transitionend", () => {
+    //     if (spinnerContainer.classList.contains('spinner-hidden')) {
+    //         spinnerContainer.style.display = 'none';
+    //     }
+    // });
 });
 
