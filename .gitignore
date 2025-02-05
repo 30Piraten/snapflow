@@ -12,6 +12,6 @@ docs/mainproject.md
 *.csv
 /keys/*
 
-/docs/*
+
 /src/config/cloudfront.go
 /tmp
