@@ -4,7 +4,10 @@ import (
 	"os"
 	"strings"
 
+	"github.com/30Piraten/snapflow/models"
+	"github.com/30Piraten/snapflow/services"
 	svc "github.com/30Piraten/snapflow/services"
+	"github.com/30Piraten/snapflow/url"
 	"github.com/30Piraten/snapflow/utils"
 	"github.com/gofiber/fiber/v2"
 )
@@ -35,13 +38,13 @@ func HandleOrderSubmission(c *fiber.Ctx) error {
 	utils.Logger.Info("Starting order submission processing")
 
 	// Parse the order details
-	order, err := utils.ParseOrderDetails(c)
+	order, err := services.ParseOrderDetails(c)
 	if err != nil {
 		return utils.HandleError(c, fiber.StatusBadRequest, "Failed to parse order details", err)
 	}
 
 	// Generate presigned URL
-	presignedResponse, err := utils.GeneratePresignedURL(order)
+	presignedResponse, err := url.GeneratePresignedURL(order)
 	if err != nil {
 		return utils.HandleError(c, fiber.StatusInternalServerError, "File validation or processing failed", err)
 	}
@@ -57,7 +60,7 @@ func HandleOrderSubmission(c *fiber.Ctx) error {
 	}
 
 	// Return a successful response
-	return c.JSON(svc.ResponseData{
+	return c.JSON(models.ResponseData{
 		Message:      "Order received successfully",
 		Order:        order,
 		PresignedURL: presignedResponse.URL,

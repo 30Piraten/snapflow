@@ -5,12 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"image"
-	"mime/multipart"
 	"net/http"
 	"regexp"
 	"strings"
 
-	"github.com/30Piraten/snapflow/utils"
+	"github.com/30Piraten/snapflow/models"
 )
 
 // AllowedFileExtensions defines permitted image file extensions
@@ -20,18 +19,9 @@ var AllowedFileExtensions = map[string]struct{}{
 	".png":  {},
 }
 
-type PhotoOrder struct {
-	FullName  string                  `json:"fullName"`
-	Location  string                  `json:"location"`
-	Size      string                  `json:"size"`
-	PaperType string                  `json:"paperType"`
-	Email     string                  `json:"email"`
-	Photos    []*multipart.FileHeader `json:"photos"`
-}
-
 // ValidateOrder validates a PhotoOrder instance, returning an error if required fields are missing.
 // removed c *fiber.Ctx
-func ValidateOrder(order *PhotoOrder) error {
+func ValidateOrder(order *models.PhotoOrder) error {
 	if order == nil {
 		return errors.New("order cannot be nil")
 	}
@@ -103,11 +93,11 @@ func ValidateOrder(order *PhotoOrder) error {
 // size, it resizes the image to meet the target size.
 // The processed image is returned, or an error is returned if any
 // validation or processing fails.
-func (p *NewProcessor) ValidateAndProcessImage(imgData []byte, opts utils.ProcessingOptions) (image.Image, error) {
+func (p *ImageProcessor) ValidateAndProcessImage(imgData []byte, opts models.ProcessingOptions) (image.Image, error) {
 	// Validate file size
 	fileSize := int64(len(imgData))
-	if fileSize > utils.MaxFileSize {
-		return nil, fmt.Errorf("file size %d bytes exceeds maximum allowed size of %d bytes", fileSize, utils.MaxFileSize)
+	if fileSize > models.MaxFileSize {
+		return nil, fmt.Errorf("file size %d bytes exceeds maximum allowed size of %d bytes", fileSize, models.MaxFileSize)
 	}
 
 	// Decode the image securely
@@ -147,9 +137,10 @@ func (p *NewProcessor) ValidateAndProcessImage(imgData []byte, opts utils.Proces
 	}
 
 	// Resize the image if the file size exceeds the target size
-	if fileSize > utils.TargetFileSize {
-		opts.TargetSizeBytes = utils.TargetFileSize
+	if fileSize > models.TargetFileSize {
+		opts.TargetSizeBytes = models.TargetFileSize
 		return p.ProcessImageWithSizeTarget(img, opts)
+		// return services.ProcessImageWithSizeTarget(img, opts)
 	}
 
 	// Accept the image without resizing if <= TargetFileSize

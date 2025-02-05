@@ -6,7 +6,9 @@ import (
 	"mime/multipart"
 	"sync"
 
+	"github.com/30Piraten/snapflow/models"
 	"github.com/30Piraten/snapflow/utils"
+	"github.com/gofiber/fiber/v2"
 )
 
 // ProcessMultipleFiles processes multiple uploaded files concurrently using the given
@@ -16,16 +18,17 @@ import (
 // FileProcessingResult for each successfully processed file and a slice of errors
 // for any failed processing attempts. The results and errors are collected and
 // returned once all processing is complete.
-func ProcessMultipleFiles(files []*multipart.FileHeader, opts ProcessingOptions) ([]FileProcessingResult, []error) {
+func ProcessMultipleFiles(c *fiber.Ctx, files []*multipart.FileHeader, opts models.ProcessingOptions) ([]models.FileProcessingResult, []error) {
 
 	var (
-		results   []FileProcessingResult
+		results   []models.FileProcessingResult
 		errors    []error
 		wg        sync.WaitGroup
-		semaphore = make(chan struct{}, MaxConcurrentProcessing)
+		semaphore = make(chan struct{}, models.MaxConcurrentProcessing)
 	)
 
 	processor := NewImageProcessor(utils.Logger)
+	order := new(models.PhotoOrder)
 
 	// Validate all files upfront
 	for _, file := range files {
@@ -36,7 +39,7 @@ func ProcessMultipleFiles(files []*multipart.FileHeader, opts ProcessingOptions)
 		}
 
 		fileData, err := io.ReadAll(source)
-		source.Close() // close the file after reading
+		source.Close() // -> close the file after reading
 		if err != nil {
 			errors = append(errors, fmt.Errorf("failed to read the file %s: %v", file.Filename, err))
 			continue
@@ -53,7 +56,7 @@ func ProcessMultipleFiles(files []*multipart.FileHeader, opts ProcessingOptions)
 	}
 
 	// Concurrent processing of validated files
-	resultsChan := make(chan FileProcessingResult, len(files))
+	resultsChan := make(chan models.FileProcessingResult, len(files))
 	errorsChan := make(chan error, len(files))
 
 	for _, file := range files {
@@ -64,9 +67,9 @@ func ProcessMultipleFiles(files []*multipart.FileHeader, opts ProcessingOptions)
 			semaphore <- struct{}{}
 			defer func() { <-semaphore }()
 
-			result := ProcessFile(file, opts, order)
+			result := ProcessFile(c, file, opts, order)
 			if result.Error != nil {
-				errorsChan <- result.Error
+				errorsChan <- &result.Error.Error // Review
 			} else {
 				resultsChan <- result
 			}

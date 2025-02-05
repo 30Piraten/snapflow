@@ -4,6 +4,7 @@ import (
 	"io"
 	"mime/multipart"
 
+	"github.com/30Piraten/snapflow/models"
 	"github.com/30Piraten/snapflow/utils"
 	"github.com/gofiber/fiber/v2"
 )
@@ -14,7 +15,7 @@ import (
 // file and returns a JSON response with the path of the processed file if
 // successful. If there are any errors during processing, it returns a 500 Internal
 // Server Error with the error message.
-func handleSingleFile(c *fiber.Ctx, file *multipart.FileHeader, opts ProcessingOptions) error {
+func handleSingleFile(c *fiber.Ctx, file *multipart.FileHeader, opts models.ProcessingOptions) error {
 
 	// Open the file
 	source, err := file.Open()
@@ -36,10 +37,12 @@ func handleSingleFile(c *fiber.Ctx, file *multipart.FileHeader, opts ProcessingO
 		return utils.HandleError(c, fiber.StatusBadRequest, "File validation failed", err)
 	}
 
+	order := new(models.PhotoOrder)
+
 	// Process the file
-	result := ProcessFile(file, opts, order)
+	result := ProcessFile(c, file, opts, order)
 	if result.Error != nil {
-		return utils.HandleError(c, fiber.StatusInternalServerError, "Failed to process file", result.Error)
+		return utils.HandleError(c, fiber.StatusInternalServerError, "Failed to process file", &result.Error.Error)
 	}
 
 	return c.JSON(fiber.Map{

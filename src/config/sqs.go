@@ -20,6 +20,13 @@ const (
 	retryDelay = 1 * time.Second
 )
 
+// PrintJob represents a print request
+type PrintJob struct {
+	CustomerEmail       string `json:"customer_email"`
+	PhotoID             string `json:"photo_id"`
+	ProcessedS3Location string `json:"processed_s3_location"`
+}
+
 var sqsClient *sqs.Client
 
 // SendPrintRequest sends a print job request to SQS
@@ -43,7 +50,7 @@ func SendPrintRequest(customerEmail, photoID, processedS3Location string) error 
 		return fmt.Errorf("failed to marshal print job: %w", err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second) // 10-second timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second) // 5-second timeout
 	defer cancel()
 
 	var previousError error
@@ -51,7 +58,7 @@ func SendPrintRequest(customerEmail, photoID, processedS3Location string) error 
 		output, err := client.SendMessage(ctx, &sqs.SendMessageInput{
 			QueueUrl:     aws.String(queueURL),
 			MessageBody:  aws.String(string(jobBytes)),
-			DelaySeconds: 10,
+			DelaySeconds: 5,
 		})
 
 		if err == nil {

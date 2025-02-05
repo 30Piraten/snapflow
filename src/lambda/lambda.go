@@ -58,7 +58,7 @@ func InitAWS() {
 // Simulated Print Function
 func SimulatedPrint(job PrintJob) {
 	fmt.Printf("🖨️ Printing photo: %s for %s\n", job.PhotoID, job.CustomerEmail)
-	time.Sleep(5 * time.Second) // Simulate a 5-second print delay
+	time.Sleep(15 * time.Second) // Simulate a 5-second print delay
 	fmt.Println("✅ Print completed!")
 }
 
@@ -69,7 +69,7 @@ func ProcessPrintJob(ctx context.Context, job PrintJob) error {
 	tableName := os.Getenv("DYNAMODB_TABLE_NAME")
 	snsTopicArn := os.Getenv("SNS_TOPIC_ARN")
 
-	// Simulate printing -> addd 5 seconds delay here
+	// Simulate printing -> add 15 seconds delay here
 	SimulatedPrint(job)
 
 	// Update DynamoDB status

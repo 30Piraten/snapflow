@@ -12,6 +12,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 )
 
+var dynamoClient *dynamodb.Client
+
 func InitDynamoDB() {
 	cfg, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {

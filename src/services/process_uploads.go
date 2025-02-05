@@ -7,13 +7,17 @@ import (
 	"strings"
 	"time"
 
+	"github.com/30Piraten/snapflow/models"
+	"github.com/30Piraten/snapflow/utils"
 	"github.com/gofiber/fiber/v2"
 )
 
-var order *PhotoOrder
+type NewProcessError struct {
+	*models.ProcessingError
+}
 
 // Error returns a string representation of the error in the format "type: code - message".
-func (e *ProcessingError) Error() string {
+func (e *NewProcessError) Error() string {
 	return fmt.Sprintf("%s: %s - %s", e.Type, e.Code, e.Message)
 }
 
@@ -39,17 +43,17 @@ func ProcessUploadedFiles(c *fiber.Ctx) error {
 	}
 
 	// Validate total file count
-	if len(files) > MaxFileCount {
+	if len(files) > models.MaxFileCount {
 		// return utils.HandleError(c, fiber.StatusBadRequest, fmt.Sprintf("Too many files uploaded. Maximum allowed is %d", MaxFileCount), nil)
-		return fmt.Errorf("Too many files uploaded. Maximum allowed is %d", MaxFileCount)
+		return fmt.Errorf("Too many files uploaded. Maximum allowed is %d", models.MaxFileCount)
 	}
 
 	// Process single or multiple files
-	opts := ProcessingOptions{
-		Quality:         HighQuality,
-		TargetSizeBytes: TargetFileSize,
+	opts := models.ProcessingOptions{
+		Quality:         models.HighQuality,
+		TargetSizeBytes: models.TargetFileSize,
 		Format:          "jpeg",
-		MaxDimensions: Dimensions{
+		MaxDimensions: models.Dimensions{
 			// Need to review: TODO
 			Width:  5000,
 			Height: 5000,
@@ -65,7 +69,7 @@ func ProcessUploadedFiles(c *fiber.Ctx) error {
 	}
 
 	// Validate and handle multiple files
-	_, errors := ProcessMultipleFiles(files, opts) // results should be added here
+	_, errors := ProcessMultipleFiles(c, files, opts) // results should be added here
 	// If there are errors, return the first one
 	if len(errors) > 0 {
 		// Collect all errors into one
@@ -98,7 +102,7 @@ func generateUniqueFileName(originalName string) string {
 	basename := strings.TrimSuffix(originalName, extension)
 
 	// Sanitize the basename
-	basename = Sanitize(basename)
+	basename = utils.Sanitize(basename)
 
 	randomNumber := rand.Intn(1000)
 	timestamp := time.Now().UnixNano() // -> Make random

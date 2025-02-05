@@ -13,9 +13,11 @@ import (
 	"time"
 
 	cfg "github.com/30Piraten/snapflow/config"
+	"github.com/30Piraten/snapflow/models"
 	"github.com/30Piraten/snapflow/utils"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/gofiber/fiber/v2"
 )
 
 // ProcessFile validates and processes a single file. It takes a multipart.FileHeader
@@ -26,28 +28,28 @@ import (
 // FileProcessingResult containing the path of the saved image, the filename and
 // size of the original file. If an error occurs during processing, it returns a
 // ProcessingError with the appropriate code and message.
-func ProcessFile(file *multipart.FileHeader, opts ProcessingOptions, order *PhotoOrder) FileProcessingResult {
+func ProcessFile(c *fiber.Ctx, file *multipart.FileHeader, opts models.ProcessingOptions, order *models.PhotoOrder) models.FileProcessingResult {
 
 	region := os.Getenv("AWS_REGION")
 	bucketName := os.Getenv("BUCKET_NAME")
 
-	// Open the file
-
 	if file == nil {
-		return FileProcessingResult{
-			Error: &ProcessingError{
+		return models.FileProcessingResult{
+			Error: &models.ProcessingError{
 				Type:    "FileError",
-				Code:    ErrCodeFileOpen,
+				Code:    models.ErrCodeFileOpen,
 				Message: "file is nil",
 			},
 		}
 	}
+
+	// Open the file
 	source, err := file.Open()
 	if err != nil {
-		return FileProcessingResult{
-			Error: &ProcessingError{
+		return models.FileProcessingResult{
+			Error: &models.ProcessingError{
 				Type:    "FileError",
-				Code:    ErrCodeFileOpen,
+				Code:    models.ErrCodeFileOpen,
 				Message: fmt.Sprintf("failed to open file: %v", err),
 			},
 		}
@@ -57,10 +59,10 @@ func ProcessFile(file *multipart.FileHeader, opts ProcessingOptions, order *Phot
 	// Read file data
 	imgData, err := io.ReadAll(source)
 	if err != nil {
-		return FileProcessingResult{
-			Error: &ProcessingError{
+		return models.FileProcessingResult{
+			Error: &models.ProcessingError{
 				Type:    "FileError",
-				Code:    ErrCodeFileRead,
+				Code:    models.ErrCodeFileRead,
 				Message: fmt.Sprintf("failed to read file data: %v", err),
 			},
 		}
@@ -70,23 +72,21 @@ func ProcessFile(file *multipart.FileHeader, opts ProcessingOptions, order *Phot
 	processor := NewImageProcessor(utils.Logger)
 	processedImage, err := processor.ValidateAndProcessImage(imgData, opts)
 	if err != nil {
-		return FileProcessingResult{
-			Error: &ProcessingError{
+		return models.FileProcessingResult{
+			Error: &models.ProcessingError{
 				Type:    "Validation",
-				Code:    ErrCodeProcessingFailed,
+				Code:    models.ErrCodeProcessingFailed,
 				Message: fmt.Sprintf("validation or processing failed: %v", err),
 			},
 		}
 	}
 
-	////////////////////////////////////////////////////////////////////
-	// cannot use order (variable of type *PhotoOrder) as *fiber.Ctx value in argument to ParseOrderDetailscompiler
-	order, err = ParseOrderDetails(order)
+	order, err = ParseOrderDetails(c)
 	if err != nil {
-		return FileProcessingResult{
-			Error: &ProcessingError{
+		return models.FileProcessingResult{
+			Error: &models.ProcessingError{
 				Type:    "Validation",
-				Code:    ErrCodeProcessingFailed,
+				Code:    models.ErrCodeProcessingFailed,
 				Message: fmt.Sprintf("failed to parse form fields: %v", err),
 			},
 		}
@@ -100,7 +100,7 @@ func ProcessFile(file *multipart.FileHeader, opts ProcessingOptions, order *Phot
 	s3Client := s3.NewFromConfig(config)
 
 	// Construct the the S3 key with the user's folder and date
-	userFolder := Sanitize(order.FullName) // R
+	userFolder := utils.Sanitize(order.FullName)
 	uploadDate := time.Now().Format("jan_02")
 	uniqueFileName := generateUniqueFileName(file.Filename)
 	s3key := path.Join("uploads", userFolder, uploadDate, uniqueFileName)
@@ -109,23 +109,24 @@ func ProcessFile(file *multipart.FileHeader, opts ProcessingOptions, order *Phot
 	var buf bytes.Buffer
 	err = jpeg.Encode(&buf, processedImage, nil)
 	if err != nil {
-		return FileProcessingResult{
-			Error: &ProcessingError{
+		return models.FileProcessingResult{
+			Error: &models.ProcessingError{
 				Type:    "ImageEncodingError",
-				Code:    ErrCodeProcessingFailed,
+				Code:    models.ErrCodeProcessingFailed,
 				Message: fmt.Sprintf("failed to encode image: %v", err),
 			},
 		}
 	}
+
 	imageBytes := buf.Bytes()
 
 	// Upload processed image to S3
 	err = cfg.UploadToS3(s3Client, bucketName, s3key, imageBytes, region)
 	if err != nil {
-		return FileProcessingResult{
-			Error: &ProcessingError{
+		return models.FileProcessingResult{
+			Error: &models.ProcessingError{
 				Type:    "S3Error",
-				Code:    ErrCodeFileSave,
+				Code:    models.ErrCodeFileSave,
 				Message: fmt.Sprintf("failed to upload image to S3: %v", err),
 			},
 		}
@@ -133,10 +134,9 @@ func ProcessFile(file *multipart.FileHeader, opts ProcessingOptions, order *Phot
 
 	log.Printf("foldername: %s", userFolder)
 
-	return FileProcessingResult{
+	return models.FileProcessingResult{
 		Path:     s3key, // <- Changed the name from s3Path to s3Key
 		Filename: file.Filename,
 		Size:     file.Size,
 	}
-
 }
