@@ -17,7 +17,7 @@ import (
 // Main configures the route for the Photo Upload service
 func main() {
 	// Create a new instance of the template engine
-	engine := html.New("./views", ".html")
+	engine := html.New("../web/views", ".html")
 
 	// Enable template engine reloading in development
 	engine.Reload(true) // -> Enabled during development
