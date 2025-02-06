@@ -1,3 +1,5 @@
+# Added outouts to confirm environment variables  
+# declared in the Terraform configuration
 output "s3_bucket_name" {
   value = module.s3.s3_bucket_name
 }

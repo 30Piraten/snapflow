@@ -1,3 +1,4 @@
+# Terraform provider configuration
 terraform {
   required_providers {
     aws = {
@@ -7,6 +8,7 @@ terraform {
   }
 }
 
+# Using my AWS configured profile
 provider "aws" {
   profile = "tf-user"
   region  = var.region

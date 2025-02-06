@@ -1,17 +1,12 @@
 src/extras
-
 src/.env
 
-*.tfstate
-*.tfstate.backup
-.terraform
+*.tfstate            
+.terraform/*         
 .terraform.lock.hcl
+*.tfstate.backup      
+terraform.tfvars     
+terraform.tfvars.json                 
 
 docs/mainproject.md
-
-*.csv
-/keys/*
-
-
-/src/config/cloudfront.go
 /tmp
