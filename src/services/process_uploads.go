@@ -22,10 +22,9 @@ func (e *NewProcessError) Error() string {
 	return fmt.Sprintf("%s: %s - %s", e.Type, e.Code, e.Message)
 }
 
-// ProcessUploadedFiles parses the uploaded files
-// and processes them accordingly. If there is a
-// single or multiple files a JSON response, is
-// returned containing the file path.
+// ProcessUploadedFiles parses the uploaded files and processes
+// them accordingly. If there is a single or there are multiple
+// files, a JSON response is returned.
 func ProcessUploadedFiles(c *fiber.Ctx) error {
 
 	// Parse the uploaded files
