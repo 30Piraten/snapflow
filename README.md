@@ -2,27 +2,36 @@
 
 ## 1. Overview
 **Project Name:** SnapFlow (Sprint Print)
-**Description:** A cloud-based photo printing workflow that allows users to upload, process, and print photos, with automated tracking and customer notifications.  
+
+**Description:** A cloud-based photo printing workflow that allows users to upload, process, and print photos, with automated tracking and customer notifications. 
+
 **Target Audience:** Developers, DevOps engineers, and cloud architects.  
-**Key Technologies:** Go (Fiber), AWS (S3, DynamoDB, SQS, Lambda, SNS, SES), Terraform.  
+
+**Key Technologies:** Go (Fiber), AWS (S3, DynamoDB, SQS, Lambda, SNS, SES), and Terraform.  
 
 ## 1.1. About Company X:
 There are four major divisons in Company X.
 
-1.  Admin - Order and Payment: Payment processing is handled by the admin office. When a customer / photographer walks, they place an order with their details, confirm the format for their photos (this include paper type and size, which are important). Once this is done, they are issued a receipt. This receipt is to the editing department alongside the photos (which is either scanned or uploaded to the computer's hard drive). In short, order and payment are confirmed first before anything else is done.
+1.  **Admin - Order and Payment:** The Admin Office is responsible for handling order placement and payment processing. When a customer or photographer arrives, they place an order by providing their details and selecting the desired photo format, which includes choosing the paper type and size—both of which are critical aspects of the order. Once the order is confirmed, a receipt is issued. This receipt and the photos (scanned or uploaded to the computer's hard drive) are then forwarded to the Editing Department. In summary, no editing or further processing occurs until payment and order details have been confirmed.
 
-2.  Editing: The next phase (where I worked), handles all editing (this can range from cropping / resizing to color correction and sharpness, etc.). Photos cannot be editied without the order/payment receipt. Once an editor / retoucher receives a receipt, photos are scanned or uploaded, then a folder structure is created for that customer, time stamped with a date. This format helps us keep record of what was edited and when in case there's an error we can always roll back. Now, once the order is taken and photos uploaded, editing of the photo starts, once done, it is sent for printing. Since my department specializes on `Sprint print`--sprint print is an express-on-budget form of editing plus printing that we mostly run. This means we prioritize only two forms of editing from a bucket of options--which are color correction and resize. Edited photos are marked as sprint print before its sent to the printing department.
+2.  **Editing:** The Editing Department (where I worked) is responsible for all photo enhancements, ranging from cropping and resizing to color correction and sharpness adjustments. No edits can be made without an order/payment receipt.
+Upon receiving a receipt, the editor or retoucher scans or uploads the photos and organizes them into a timestamped folder structure for tracking. This ensures that all edits are documented, allowing for easy rollback in case of errors.
+My department specializes in Sprint Print, a budget-friendly, express editing and printing service. Sprint Print prioritizes only two key editing operations:
+    - Color correction
+    - Resizing
+
+    Photos designated for Sprint Print are marked accordingly before being sent to the Printing Department.
     
-3.  Printing: once the editing department sends the edited photos for printing, a sprint print is initiated (this is based on whether the sent photos are marked as sprint print). For sprint print, notifications are not sent to the customer, this is the key difference. They wait to collect their photos which often takes a minutes. Sprint print is mostly for less than 5 photos. Less payment and overhead, hence the name.
+3.  **Printing:** Once the Editing Department sends the edited photos for printing, the Sprint Print workflow is initiated (only for marked photos). The key difference with Sprint Print is that no notifications are sent to customers. Instead, customers wait to collect their photos, often processed within minutes.
+Sprint Print is intended for small orders (typically fewer than five photos), allowing for a low-cost, high-speed workflow with minimal overhead.
    
-4.  Delivery | collection: the delivery department handles all delivery of photos (whether framed or not). Sprint print photos are collected here once printing is complete.
+4.  **Delivery | collection:** The Delivery Department manages the collection and delivery of printed photos, including framed orders. For Sprint Print, customers collect their photos directly from this department immediately after printing is completed.
 
 ## 1.1. Purpose of the project: 
 I wanted to simulate the process of the sprint print in the editing department, which is fast paced using Amazon Web Services. S3 for blob storage and DynamoDB for using details / metadata. While a Lambda function simulates the printing process (this Lambda function can also be attached to a printer). The Lambda function then proceeds to update the DynamoDB table with a "printed" notice once the printing is complete. This print request comes from an SQS queue that decouples the workflow in case there are multiple requests coming in at the same time. Print jobs are then pulled off one stack at a time. An order is received with details, which are then stored in our database (in this case, the hard drive). Afterwards, I edit and send for printing. Editors in the sprint print department do not concern themselves with notifiying customers, our job is pretty much simple but very fast. 
 
 ## 2. System Architecture
 ### 2.1 Workflow Diagram
-_(Include both text-based and visual representations)_
 <!-- ![snapflow arch](../arc/snapflow.png) -->
 ![snapflow2 arch](/arc/snapflow2.png)
 
