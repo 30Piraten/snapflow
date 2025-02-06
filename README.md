@@ -27,12 +27,26 @@ Sprint Print is intended for small orders (typically fewer than five photos), al
    
 4.  **Delivery | collection:** The Delivery Department manages the collection and delivery of printed photos, including framed orders. For Sprint Print, customers collect their photos directly from this department immediately after printing is completed.
 
-## 1.1. Purpose of the project: 
-I wanted to simulate the process of the sprint print in the editing department, which is fast paced using Amazon Web Services. S3 for blob storage and DynamoDB for using details / metadata. While a Lambda function simulates the printing process (this Lambda function can also be attached to a printer). The Lambda function then proceeds to update the DynamoDB table with a "printed" notice once the printing is complete. This print request comes from an SQS queue that decouples the workflow in case there are multiple requests coming in at the same time. Print jobs are then pulled off one stack at a time. An order is received with details, which are then stored in our database (in this case, the hard drive). Afterwards, I edit and send for printing. Editors in the sprint print department do not concern themselves with notifiying customers, our job is pretty much simple but very fast. 
+## 1.2. Purpose of the Project:
+The goal was to simulate the Sprint Print workflow in the Editing Department using Amazon Web Services (AWS). The system is designed as follows:
+
+1. Amazon S3 stores photo files (blob storage).
+2. Amazon DynamoDB stores order details and metadata.
+3. AWS Lambda simulates the printing process (and could be integrated with a physical printer).
+4. Amazon SQS queues print requests, decoupling the workflow for scalability.
+5. I added SNS and SES to make the workflow more robust. (SNS handles notification service, while SES delivers the email). The SNS operation is handled by Lambda.
+
+**Workflow Simulation:**
+1. An order is received and stored in DynamoDB (similar to saving details on a hard drive).
+2. Editing is performed, and the file is sent for printing.
+3. The printing request enters the SQS queue, ensuring orderly processing even if multiple requests arrive simultaneously.
+4. Lambda processes the print job and updates DynamoDB with a "Printed" status once completed.
+
+Editors in the Sprint Print Department focus solely on editing and sending photos for printing—they do not handle customer notifications. The entire process is optimized for speed and efficiency.
+
 
 ## 2. System Architecture
 ### 2.1 Workflow Diagram
-<!-- ![snapflow arch](../arc/snapflow.png) -->
 ![snapflow2 arch](/arc/snapflow2.png)
 
 ### **2.2 Features and Workflow**
