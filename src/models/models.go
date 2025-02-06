@@ -35,23 +35,22 @@ type PhotoOrder struct {
 	Photos    []*multipart.FileHeader `json:"photos"`
 }
 
-// image.go file definition
 // Quality settings for image processing
 const (
-	HighQuality   = 85
-	MediumQuality = 75
-	LowQuality    = 65
+	HighQuality   int = 85
+	MediumQuality int = 75
+	LowQuality    int = 65
 
-	QualityStep = 5  // Step to reduce JPEG quality
-	MinQuality  = 10 // Minimum JPEG quality
+	QualityStep int = 5  // Step to reduce JPEG quality
+	MinQuality  int = 10 // Minimum JPEG quality
 
 	ProcessedImageDir = "uploads"
 
-	MaxConcurrentProcessing = 3               // Max concurrent uploads
-	MaxFileCount            = 10              // Maximum 10 files per request
-	TargetFileSize          = 1 * 1024 * 1024 // 1MB total for all sizes
-	MaxFileSize             = 50 * 100 * 1024 // 50MB per file
-	MaxTotalUploadSize      = 5 * 1024 * 1024 // 5MB total for all files
+	MaxConcurrentProcessing int   = 3               // Max concurrent uploads
+	MaxFileCount            int   = 10              // Maximum 10 files per request
+	TargetFileSize          int64 = 1 * 1024 * 1024 // 1MB total for all sizes
+	MaxFileSize             int64 = 50 * 100 * 1024 // 50MB per file
+	MaxTotalUploadSize      int   = 5 * 1024 * 1024 // 5MB total for all files
 )
 
 // ProcessingOptions defines configuration for image processing

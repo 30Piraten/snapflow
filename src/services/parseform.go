@@ -7,9 +7,8 @@ import (
 	"go.uber.org/zap"
 )
 
-// parseOrderDetails parses the order details from the request body and validates
-// the required fields. If the parsing or validation fails, it returns an error.
-// If the parsing and validation succeed, it returns the parsed order details.
+// parseOrderDetails parses the order details from
+// the request body and validates the required fields.
 func ParseOrderDetails(c *fiber.Ctx) (*models.PhotoOrder, error) {
 	order := new(models.PhotoOrder)
 

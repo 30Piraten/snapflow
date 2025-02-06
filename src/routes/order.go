@@ -12,10 +12,10 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-// HandleOrderSubmission is the main entry point for the order submission process.
-// It will parse order details, generate a presigned URL, process uploaded files
-// and return a successful response containing the order details, presigned URL
-// and order ID.
+// HandleOrderSubmission is the main entry point for the order
+// submission process. It will parse order details, generate
+// a presigned URL, process uploaded files and return a successful
+// response containing the order details, presigned URL and order ID.
 func HandleOrderSubmission(c *fiber.Ctx) error {
 
 	// trustedOrigin defines the trusted frontend domain
@@ -33,7 +33,7 @@ func HandleOrderSubmission(c *fiber.Ctx) error {
 	}
 
 	// Limit the upload size to ensure large files are rejected early
-	c.Locals("limit", "50MB")
+	c.Locals("limit", "50MB") // -> Review
 
 	utils.Logger.Info("Starting order submission processing")
 
@@ -49,13 +49,8 @@ func HandleOrderSubmission(c *fiber.Ctx) error {
 		return utils.HandleError(c, fiber.StatusInternalServerError, "File validation or processing failed", err)
 	}
 
-	// Log the generated presigned URL for debugging
-	// utils.Logger.Info("Generated Presigned URL:", zap.String("URL", presignedResponse.URL))x
-
 	// Process uploaded photos
 	if err := svc.ProcessUploadedFiles(c); err != nil {
-		// // Return an error response if the file processing failes
-		// utils.Logger.Error("File validation/processing failed", zap.Error(err))
 		return utils.HandleError(c, fiber.StatusBadRequest, "Failed to process files", err)
 	}
 
@@ -67,25 +62,3 @@ func HandleOrderSubmission(c *fiber.Ctx) error {
 		OrderID:      presignedResponse.OrderID,
 	})
 }
-
-// // parseOrderDetails parses the order details from the request body and validates
-// // the required fields. If the parsing or validation fails, it returns an error.
-// // If the parsing and validation succeed, it returns the parsed order details.
-// func parseOrderDetails(c *fiber.Ctx) (*utils.PhotoOrder, error) {
-// 	order := new(utils.PhotoOrder)
-// 	if err := c.BodyParser(order); err != nil {
-// 		utils.Logger.Error("Form parsing failed", zap.Error(err))
-// 		return nil, err
-// 	}
-
-// 	// Validate required fields
-// 	if err := svc.ValidateOrder(c, order); err != nil {
-// 		return nil, err
-// 	}
-
-// 	utils.Logger.Info("Order details parsed successfully",
-// 		zap.String("fullName", order.FullName),
-// 		zap.String("email", order.Email))
-
-// 	return order, nil
-// }

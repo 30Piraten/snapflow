@@ -9,12 +9,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-// handleSingleFile validates and processes a single file. It first validates the
-// file using the provided ProcessingOptions, and if the validation fails, it
-// returns a 400 Bad Request error. If the validation succeeds, it processes the
-// file and returns a JSON response with the path of the processed file if
-// successful. If there are any errors during processing, it returns a 500 Internal
-// Server Error with the error message.
+// handleSingleFile validates and processes a single file
 func handleSingleFile(c *fiber.Ctx, file *multipart.FileHeader, opts models.ProcessingOptions) error {
 
 	// Open the file
@@ -33,7 +28,6 @@ func handleSingleFile(c *fiber.Ctx, file *multipart.FileHeader, opts models.Proc
 	// Validate the file before processing
 	processor := NewImageProcessor(utils.Logger)
 	if _, err = processor.ValidateAndProcessImage(fileData, opts); err != nil {
-		// utils.Logger.Error("File validation failed", zap.Error(err))
 		return utils.HandleError(c, fiber.StatusBadRequest, "File validation failed", err)
 	}
 

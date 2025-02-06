@@ -9,11 +9,12 @@ import (
 // ImageProcessor handles all image processing operations
 type ImageProcessor struct {
 	Logger *zap.Logger
-	cache  *sync.Map // -> Allow cache for processed images
+	// Allow cache for processed images
+	cache *sync.Map
 }
 
-// NewImageProcessor creates a new instance of ImageProcessor with the provided Logger.
-// The Logger is used for logging messages, and a new cache is initialized for caching processed images.
+// NewImageProcessor creates a new instance of
+// ImageProcessor with the provided Logger.
 func NewImageProcessor(Logger *zap.Logger) *ImageProcessor {
 	return &ImageProcessor{
 		Logger: Logger,

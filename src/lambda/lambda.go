@@ -30,14 +30,14 @@ var (
 	snsTopicArn  string
 )
 
-// PrintJob represents a print request
+// PrintJob holds the print request
 type PrintJob struct {
 	CustomerEmail       string `json:"customer_email"`
 	PhotoID             string `json:"photo_id"`
 	ProcessedS3Location string `json:"processed_s3_location"`
 }
 
-// Initialize AWS clients
+// Initialize AWS clients -> DynamoDB and SNS
 func InitAWS() {
 	config, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
@@ -55,21 +55,24 @@ func InitAWS() {
 	}
 }
 
-// Simulated Print Function
+// SimulatedPrint handles a dummy printer using a delay sequence
 func SimulatedPrint(job PrintJob) {
 	fmt.Printf("🖨️ Printing photo: %s for %s\n", job.PhotoID, job.CustomerEmail)
-	time.Sleep(15 * time.Second) // Simulate a 5-second print delay
+	// Simulate a 10-second print delay
+	time.Sleep(10 * time.Second)
 	fmt.Println("✅ Print completed!")
 }
 
-// Process a single print job
+// ProcessPrintJob processes a print job by simulating
+// the printing process, updating the photo status in
+// DynamoDB to "printed", and sending a notification via SNS.
 func ProcessPrintJob(ctx context.Context, job PrintJob) error {
 
 	// Access .env variables
 	tableName := os.Getenv("DYNAMODB_TABLE_NAME")
 	snsTopicArn := os.Getenv("SNS_TOPIC_ARN")
 
-	// Simulate printing -> add 15 seconds delay here
+	// Simulate printing -> add 5 seconds delay here
 	SimulatedPrint(job)
 
 	// Update DynamoDB status
@@ -113,6 +116,9 @@ func ProcessPrintJob(ctx context.Context, job PrintJob) error {
 	return nil
 }
 
+// Handler function processes a print job by unmarshaling
+// the message body into a PrintJob, then calls ProcessPrintJob
+// to simulate the printing process.
 func Handler(ctx context.Context, event SQSEvent) error {
 	var printJob PrintJob
 
@@ -133,7 +139,6 @@ func Handler(ctx context.Context, event SQSEvent) error {
 			continue
 		}
 	}
-
 	return nil
 }
 

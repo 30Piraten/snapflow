@@ -2,8 +2,8 @@ package utils
 
 import "strings"
 
-// Sanitize sanitizes a stringIt replaces spaces and
-// other unsafe characters with underscore
+// Sanitize sanitizes a string. It replaces
+// spaces and other unsafe characters with underscore
 func Sanitize(folderName string) string {
 	// Replace spaces with underscore
 	folderName = strings.ReplaceAll(folderName, " ", "_")

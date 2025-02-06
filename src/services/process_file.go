@@ -20,14 +20,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-// ProcessFile validates and processes a single file. It takes a multipart.FileHeader
-// and options for image processing. It first validates the file for security, then
-// opens the file and reads its data. Afterwards it checks if the file is above the target
-// size and if so, it resizes the image to the target size. The processed image is
-// then saved to the uploads directory with a unique filename. It returns a
-// FileProcessingResult containing the path of the saved image, the filename and
-// size of the original file. If an error occurs during processing, it returns a
-// ProcessingError with the appropriate code and message.
+// ProcessFile validates and processes a single file
 func ProcessFile(c *fiber.Ctx, file *multipart.FileHeader, opts models.ProcessingOptions, order *models.PhotoOrder) models.FileProcessingResult {
 
 	region := os.Getenv("AWS_REGION")
@@ -81,6 +74,7 @@ func ProcessFile(c *fiber.Ctx, file *multipart.FileHeader, opts models.Processin
 		}
 	}
 
+	// Parse the order details
 	order, err = ParseOrderDetails(c)
 	if err != nil {
 		return models.FileProcessingResult{
@@ -135,7 +129,7 @@ func ProcessFile(c *fiber.Ctx, file *multipart.FileHeader, opts models.Processin
 	log.Printf("foldername: %s", userFolder)
 
 	return models.FileProcessingResult{
-		Path:     s3key, // <- Changed the name from s3Path to s3Key
+		Path:     s3key,
 		Filename: file.Filename,
 		Size:     file.Size,
 	}

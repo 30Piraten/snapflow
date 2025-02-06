@@ -11,13 +11,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-// ProcessMultipleFiles processes multiple uploaded files concurrently using the given
-// processing options. It first validates all files and returns any validation errors
-// upfront. If all files are valid, they are processed concurrently with a limit on
-// the number of concurrent operations. The function returns a slice of
-// FileProcessingResult for each successfully processed file and a slice of errors
-// for any failed processing attempts. The results and errors are collected and
-// returned once all processing is complete.
+// ProcessMultipleFiles processes multiple uploaded files
+// concurrently using the given processing options.
 func ProcessMultipleFiles(c *fiber.Ctx, files []*multipart.FileHeader, opts models.ProcessingOptions) ([]models.FileProcessingResult, []error) {
 
 	var (
@@ -39,7 +34,8 @@ func ProcessMultipleFiles(c *fiber.Ctx, files []*multipart.FileHeader, opts mode
 		}
 
 		fileData, err := io.ReadAll(source)
-		source.Close() // -> close the file after reading
+		// Close the file after reading
+		source.Close()
 		if err != nil {
 			errors = append(errors, fmt.Errorf("failed to read the file %s: %v", file.Filename, err))
 			continue

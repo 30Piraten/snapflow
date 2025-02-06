@@ -29,11 +29,12 @@ type PrintJob struct {
 
 var sqsClient *sqs.Client
 
-// SendPrintRequest sends a print job request to SQS
+// SendPrintRequest sends a print request to SQS for the
+// provided customer email, photo ID, and processed S3 location.
 func SendPrintRequest(customerEmail, photoID, processedS3Location string) error {
 	queueURL := os.Getenv("SQS_QUEUE_URL")
 
-	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion("us-east-1")) // Explicit region
+	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion("us-east-1"))
 	if err != nil {
 		log.Fatal("failed to load configuration: ", err)
 	}
@@ -50,7 +51,7 @@ func SendPrintRequest(customerEmail, photoID, processedS3Location string) error 
 		return fmt.Errorf("failed to marshal print job: %w", err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second) // 5-second timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	var previousError error
@@ -58,20 +59,21 @@ func SendPrintRequest(customerEmail, photoID, processedS3Location string) error 
 		output, err := client.SendMessage(ctx, &sqs.SendMessageInput{
 			QueueUrl:     aws.String(queueURL),
 			MessageBody:  aws.String(string(jobBytes)),
-			DelaySeconds: 5,
+			DelaySeconds: 10,
 		})
 
 		if err == nil {
 			log.Printf("Successfully sent print request to SQS for photos %s (attempt %d), Output: %+v", photoID, attempt+1, output)
-			return nil // Success!
+			return nil
 		}
 
-		// tautological condition spoted -> err != nil
+		// This is intentional. For some weird reason I had a wrapped network
+		// error. Was trying to unwrap and examine the root cause.
 		if previousError != nil {
 			// Log the original error
 			log.Printf("Original error: %v", err)
 
-			// Try to unwrap the error (Go 1.13 and later)
+			// Try to unwrap the error
 			if unwrappedErr := errors.Unwrap(err); unwrappedErr != nil {
 				log.Printf("Unwrapped error: %v", unwrappedErr)
 
@@ -80,7 +82,7 @@ func SendPrintRequest(customerEmail, photoID, processedS3Location string) error 
 					log.Printf("Network error: %v, Timeout: %v", netErr, netErr.Timeout())
 				}
 			}
-			previousError = err // Capture the error
+			previousError = err
 			log.Printf("Failed to send print request (attempt %d): %v", attempt+1, err)
 		} else {
 			log.Printf("SendMessage returned nil error, but failed (attempt %d)", attempt+1)

@@ -19,8 +19,8 @@ var AllowedFileExtensions = map[string]struct{}{
 	".png":  {},
 }
 
-// ValidateOrder validates a PhotoOrder instance, returning an error if required fields are missing.
-// removed c *fiber.Ctx
+// ValidateOrder validates a PhotoOrder instance,
+// returning an error if required fields are missing.
 func ValidateOrder(order *models.PhotoOrder) error {
 	if order == nil {
 		return errors.New("order cannot be nil")
@@ -29,40 +29,18 @@ func ValidateOrder(order *models.PhotoOrder) error {
 	var missingFields []string
 
 	if strings.TrimSpace(order.FullName) == "" {
-		// missingFields = append(missingFields, "full name")
-		// return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-		// 	"error":      "Full name is required",
-		// 	"errorField": "FullName",
-		// })
 		return errors.New("Full name is required")
 	}
-
 	if strings.TrimSpace(order.Email) == "" {
-		// return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-		// 	"error":      "Email is required",
-		// 	"errorField": "Email",
-		// })
 		return errors.New("Email is required")
 	}
 	if strings.TrimSpace(order.Location) == "" {
-		// return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-		// 	"error":      "Print location is required",
-		// 	"errorField": "Location",
-		// })
 		return errors.New("Location is required")
 	}
 	if strings.TrimSpace(order.Size) == "" {
-		// return c.Status(fiber.StatusBadGateway).JSON(fiber.Map{
-		// 	"error":      "Print szie is required",
-		// 	"errorField": "Size",
-		// })
 		return errors.New("Photo size is required")
 	}
 	if strings.TrimSpace(order.PaperType) == "" {
-		// return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-		// 	"error":      "Paper type is required",
-		// 	"errorField": "PaperType",
-		// })
 		return errors.New("Paper type is required")
 	}
 
@@ -73,12 +51,6 @@ func ValidateOrder(order *models.PhotoOrder) error {
 	// Email validation using regex
 	emailRegex := `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
 	re := regexp.MustCompile(emailRegex)
-	// if !re.MatchString(order.Email) {
-	// 	return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-	// 		"error":      "Invalid email format",
-	// 		"errorField": "Email",
-	// 	})
-	// }
 	if !re.MatchString(order.Email) {
 		return errors.New("Invalid email format")
 	}
@@ -88,12 +60,10 @@ func ValidateOrder(order *models.PhotoOrder) error {
 
 // ValidateAndProcessImage validates and processes an image.
 // It checks the file size, decodes the image, ensures the file
-// extension is allowed, validates the MIME type, and enforces
-// maximum dimensions. If the file size exceeds the target
-// size, it resizes the image to meet the target size.
-// The processed image is returned, or an error is returned if any
-// validation or processing fails.
+// extension is allowed. It validates the MIME type, and enforces
+// maximum dimensions.
 func (p *ImageProcessor) ValidateAndProcessImage(imgData []byte, opts models.ProcessingOptions) (image.Image, error) {
+
 	// Validate file size
 	fileSize := int64(len(imgData))
 	if fileSize > models.MaxFileSize {
@@ -106,7 +76,7 @@ func (p *ImageProcessor) ValidateAndProcessImage(imgData []byte, opts models.Pro
 		return nil, fmt.Errorf("failed to decode image: %w", err)
 	}
 
-	// Validate file extension (format to extension mapping is assumed here)
+	// Validate file extension
 	extension := fmt.Sprintf(".%s", format)
 	if _, allowed := AllowedFileExtensions[extension]; !allowed {
 		return nil, fmt.Errorf("invalid file type: %s, only JPG and PNG are allowed", extension)
@@ -140,7 +110,6 @@ func (p *ImageProcessor) ValidateAndProcessImage(imgData []byte, opts models.Pro
 	if fileSize > models.TargetFileSize {
 		opts.TargetSizeBytes = models.TargetFileSize
 		return p.ProcessImageWithSizeTarget(img, opts)
-		// return services.ProcessImageWithSizeTarget(img, opts)
 	}
 
 	// Accept the image without resizing if <= TargetFileSize

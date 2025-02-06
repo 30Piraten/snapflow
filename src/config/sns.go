@@ -13,6 +13,7 @@ import (
 
 var snsClient *sns.Client
 
+// InitSNS() intializes the snsClient
 func InitSNS() {
 	// Decided to set an explicit region!
 	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion("us-east-1"))
@@ -22,6 +23,8 @@ func InitSNS() {
 	snsClient = sns.NewFromConfig(cfg)
 }
 
+// SendSNSNotification sends an SNS notification for the processed order.
+// It takes the order ID and order email as parameters and returns an error.
 func SendSNSNotification(orderID, orderEmail string) error {
 	if snsClient == nil {
 		InitSNS()
@@ -32,12 +35,14 @@ func SendSNSNotification(orderID, orderEmail string) error {
 		return fmt.Errorf("SNS_TOPIC_ARN environment variable not set")
 	}
 
-	message := fmt.Sprintf("Your order (ID: %s) has been processed! Thank you for your order. We will notify you when your order is ready for pickup.", orderID) // Improved message
+	order_update := os.Getenv("ORDER_UPDATE")
+
+	message := fmt.Sprintf("Your order (ID: %s) has been processed! Thank you for your order. We will notify you when your order is ready for pickup.", orderID)
 
 	input := &sns.PublishInput{
 		Message:  aws.String(message),
 		TopicArn: aws.String(snsTopicArn),
-		Subject:  aws.String("Order Update"),
+		Subject:  aws.String(order_update),
 	}
 
 	result, err := snsClient.Publish(context.TODO(), input)

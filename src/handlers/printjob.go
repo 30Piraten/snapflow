@@ -6,7 +6,7 @@ import (
 	"github.com/30Piraten/snapflow/config"
 )
 
-// Handler to initiate print job
+// InitiatePrintJob initiates the print job
 func InitiatePrintJob(customerEmail, photoID, processedS3Location string) error {
 	err := config.SendPrintRequest(customerEmail, photoID, processedS3Location)
 	if err != nil {

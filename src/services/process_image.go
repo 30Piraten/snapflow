@@ -15,11 +15,8 @@ import (
 	"go.uber.org/zap"
 )
 
-// ProcessImageWithSizeTarget takes an original image and processes it to meet the target size specified in
-// the ProcessingOptions. If the original image is already below the target size, it is returned as is.
-// Otherwise, the image is resized to the target size and then encoded with a quality that is reduced
-// incrementally until the target size is met. The final quality of the image is returned in the
-// ProcessingOptions struct.
+// ProcessImageWithSizeTarget takes an original image and processes
+// it to meet the target size specified in the ProcessingOptions.
 func (p *ImageProcessor) ProcessImageWithSizeTarget(originalImage image.Image, opts models.ProcessingOptions) (image.Image, error) {
 
 	var buf bytes.Buffer
@@ -62,7 +59,8 @@ func (p *ImageProcessor) ProcessImageWithSizeTarget(originalImage image.Image, o
 
 	// Encode the resized image with reduced quality if necessary
 	for {
-		buf.Reset() // Clear the buffer for each encoding attempt
+		// Clear the buffer for each encoding attempt
+		buf.Reset()
 
 		err := jpeg.Encode(&buf, resizedImage, &jpeg.Options{Quality: opts.Quality})
 		if err != nil {
@@ -93,9 +91,8 @@ func (p *ImageProcessor) ProcessImageWithSizeTarget(originalImage image.Image, o
 	return img, nil
 }
 
-// SaveImage saves the given image to the specified file path using the format and quality
-// options provided in ProcessingOptions. The function supports JPEG and PNG formats.
-// An error is returned if the file cannot be created or if the image format is unsupported.
+// SaveImage saves the given image to the specified file path
+// using the format and quality options provided in ProcessingOptions.
 func (p *ImageProcessor) SaveImage(img image.Image, path string, opts models.ProcessingOptions) error {
 
 	file, err := os.Create(path)
