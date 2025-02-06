@@ -59,8 +59,6 @@ A well-structured senior-level documentation should be **comprehensive, structur
         run  the following command: 
             - `terraform init && terraform validate` 
             - `terraform plan && terraform apply`
-
-
 ---
 
 ### **4. Features and Workflow**
@@ -130,13 +128,4 @@ A well-structured senior-level documentation should be **comprehensive, structur
    - Summary of project success.
    - Final considerations before making it public.
 
----
-
-## **Why Use This Format?**
-- **Structured & Logical Flow**: Helps different audiences (developers, DevOps, stakeholders) navigate the document.
-- **Technical Depth**: Covers setup, infrastructure, APIs, and debugging.
-- **Scalability**: Makes future iterations easier to document.
-
-This format ensures **clarity, technical depth, and maintainability** while making it easy for new developers to onboard. 🚀
-
-Would you like a markdown file template to get started?
+--_
