@@ -1,6 +1,6 @@
 # DynamoDB IAM policy for Snapflow
 resource "aws_iam_role" "dynamodb_role" {
-  name = "snapflow-dynamodb-role"
+  name = var.dynamodb_iam_role_name
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -13,12 +13,12 @@ resource "aws_iam_role" "dynamodb_role" {
       }
     ]
   })
-  
 }
 
+# IAM policy definition for DynamoDB
 resource "aws_iam_policy" "dynamodb_policy" {
-  name = "snapflow-dynamodb-policy"
-  description = "IAM policy for DynamoDB permissions"
+  name = var.dynamodb_iam_policy_name
+  description = var.dynamodb_iam_policy_description
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -37,6 +37,7 @@ resource "aws_iam_policy" "dynamodb_policy" {
   })
 }
 
+# IAM policy attachment for DynamoDB
 resource "aws_iam_role_policy_attachment" "dynamodb_role_attachment" {
   role = aws_iam_role.dynamodb_role.name
   policy_arn = aws_iam_policy.dynamodb_policy.arn

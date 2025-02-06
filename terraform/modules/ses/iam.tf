@@ -1,5 +1,7 @@
+# AWS caller identity account ID
 data "aws_caller_identity" "account" {}
 
+# SES policy document
 data "aws_iam_policy_document" "ses_policy_document" {
     statement {
       actions = [
@@ -11,12 +13,14 @@ data "aws_iam_policy_document" "ses_policy_document" {
     }
 }
 
+# SES IAM policy
 resource "aws_iam_policy" "ses_policy" {
   name = var.ses_policy_name 
   description = var.ses_policy_description 
   policy = data.aws_iam_policy_document.ses_policy_document.json
 }
 
+# SES-Lambda policy attachment 
 resource "aws_iam_role_policy_attachment" "ses_policy_attachment" {
   role = var.lambda_exec_role_name 
   policy_arn = aws_iam_policy.ses_policy.arn  

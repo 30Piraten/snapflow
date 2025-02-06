@@ -1,5 +1,5 @@
 resource "aws_iam_role" "lambda_exec_role" {
-  name = "lambda-exec-role"
+  name = var.lambda_exec_role
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -48,7 +48,9 @@ data "aws_iam_policy_document" "lambda_policy_document" {
       "logs:CreateLogStream",
       "logs:PutLogEvents"
     ]
-    resources = ["arn:aws:logs:*:*:*"]
+    resources = [
+      "arn:aws:logs:${var.region}:${data.aws_caller_identity.account.account_id}:log-group:/aws/lambda/${aws_lambda_function.dummy_print_service.function_name}:*"
+      ]
   }
 }
 

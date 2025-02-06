@@ -1,3 +1,4 @@
+# SQS config
 resource "aws_sqs_queue" "print_queue" {
   name                      = var.queue_name
   visibility_timeout_seconds = var.visibility_timeout_seconds

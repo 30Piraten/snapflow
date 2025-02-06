@@ -1,3 +1,4 @@
+# SQS variable declaration
 variable "max_message_size" {
   type = number
 }
@@ -24,4 +25,8 @@ variable "lambda_exec_role_name" {
 
 variable "sqs_policy_description" {
   type = string 
+}
+
+variable "sqs_lambda_policy_name" {
+  type = string
 }

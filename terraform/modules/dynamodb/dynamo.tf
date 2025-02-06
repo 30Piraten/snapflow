@@ -1,9 +1,4 @@
 # DynamoDB config
-
-# resource "random_id" "id" {
-#     byte_length = 8
-# }
-
 resource "aws_dynamodb_table" "customer_data_table" {
   name         = var.dynamodb_name
   billing_mode = var.billing_mode

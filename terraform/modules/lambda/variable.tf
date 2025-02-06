@@ -1,4 +1,9 @@
+# Lambda variable declaration
 variable "event_source_arn" {
+  type = string 
+}
+
+variable "region" {
   type = string 
 }
 
@@ -6,9 +11,9 @@ variable "sqs_queue_arn" {
   type = string 
 }
 
-# variable "sns_topic_arn" {
-#   type = string 
-# }
+variable "lambda_exec_role" {
+  type = string 
+}
 
 variable "dynamodb_arn" {
   type = string 

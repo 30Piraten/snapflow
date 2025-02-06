@@ -1,5 +1,6 @@
+# S3 bucket IAM role
 resource "aws_iam_role" "iam_role" {
-  name = "s3_iam_role"
+  name = var.s3_bucket_iam_role
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -14,7 +15,7 @@ resource "aws_iam_role" "iam_role" {
   })
 
   tags = {
-    Name = "s3_iam_role"
+    Name = var.s3_bucket_iam_role
     Environment = "Production"
   }
 }

@@ -1,3 +1,4 @@
+# Lambda function definition
 resource "aws_lambda_function" "dummy_print_service" {
   function_name = "dummyPrinter"
   filename = "../src/lambda/dummyprinter.zip"
@@ -17,8 +18,10 @@ resource "aws_lambda_function" "dummy_print_service" {
   }
 }
 
+# AWS caller identity to retrive account ID
 data "aws_caller_identity" "account" {}
 
+# Lambda event source mapping for SQS-Lambda
 resource "aws_lambda_event_source_mapping" "sqs_to_lambda" {
   batch_size = 10 
   event_source_arn = var.event_source_arn 

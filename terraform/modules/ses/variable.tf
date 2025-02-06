@@ -1,3 +1,4 @@
+# SES variable declaration
 variable "region" {
   type = string 
 }

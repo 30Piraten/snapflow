@@ -1,13 +1,4 @@
-# I am not using s3 glacier even though most of the photos
-# that we edit and process at Company X might be saved long term
-# Company X usually saves photos not more than 60 days. Here i am
-# using the basic s3 bucket to store processed only photos, that's it.
-# at Compnay X it is called sprint print (where no photos are backed up
-# for a longer duration, just edit and send for printing)
-
-# So, the use of lifecyle rule is required to delete or remove photos
-# once a confirmation via SES is sent to the user
-
+# S3 bucket config 
 resource "aws_s3_bucket" "processed_image_bucket" {
   bucket = var.bucket_name
   force_destroy = var.force_destroy
@@ -17,6 +8,8 @@ resource "aws_s3_bucket" "processed_image_bucket" {
   }
 }
 
+# Added a expiration of 7 days, since Company X 
+# does not move 'Sprint-print' photos to glacier
 resource "aws_s3_bucket_lifecycle_configuration" "processedS3_bucket_lifecycle" {
   bucket = aws_s3_bucket.processed_image_bucket.id 
   rule {
@@ -28,7 +21,8 @@ resource "aws_s3_bucket_lifecycle_configuration" "processedS3_bucket_lifecycle" 
   }
 }
 
-
+# S3 bucket public access block for security 
+# and preventing accidental public exposure
 resource "aws_s3_bucket_public_access_block" "processed_bucket_block" {
   bucket = aws_s3_bucket.processed_image_bucket.id
   block_public_acls       = true
@@ -37,6 +31,7 @@ resource "aws_s3_bucket_public_access_block" "processed_bucket_block" {
   restrict_public_buckets = true
 }
 
+# S3 bucket versioning
 resource "aws_s3_bucket_versioning" "processed_bucket_version" {
   bucket = aws_s3_bucket.processed_image_bucket.id
   versioning_configuration {
@@ -44,6 +39,8 @@ resource "aws_s3_bucket_versioning" "processed_bucket_version" {
   }
 }
 
+# S3 server-side encryption config
+# Used default KMS config here
 resource "aws_s3_bucket_server_side_encryption_configuration" "processedS3_bucket_sse" {
   bucket = aws_s3_bucket.processed_image_bucket.id
   rule {

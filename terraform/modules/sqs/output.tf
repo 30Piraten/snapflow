@@ -1,3 +1,4 @@
+# SQS output
 output "sqs_queue_url" {
   value = aws_sqs_queue.print_queue.url
 }

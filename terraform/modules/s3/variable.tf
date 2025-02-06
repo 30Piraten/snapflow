@@ -1,3 +1,4 @@
+# S3 variable declaration
 variable "bucket_name" {
   type    = string
 }
@@ -15,5 +16,13 @@ variable "deletion_window_in_days" {
 }
 
 variable "environment" {
+  type = string 
+}
+
+variable "s3_bucket_iam_role" {
+  type = string   
+}
+
+variable "s3_ksm_description" {
   type = string 
 }
