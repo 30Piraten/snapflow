@@ -4,6 +4,8 @@ module "s3" {
   bucket_name = var.bucket_name
   environment = var.environment
   force_destroy = var.force_destroy
+  s3_ksm_description = var.s3_ksm_description
+  s3_bucket_iam_role = var.s3_bucket_iam_role
   enable_key_rotation = var.enable_key_rotation
   deletion_window_in_days = var.deletion_window_in_days
 }
@@ -13,6 +15,9 @@ module "dynamodb" {
   source = "./modules/dynamodb"
   dynamodb_name = var.dynamodb_name
   billing_mode = var.billing_mode
+  dynamodb_iam_role_name = var.dynamodb_iam_role_name
+  dynamodb_iam_policy_name = var.dynamodb_iam_policy_name
+  dynamodb_iam_policy_description = var.dynamodb_iam_policy_description
 }
 
 # Config definition fot SQS 
@@ -21,6 +26,7 @@ module "sqs" {
   queue_name = var.queue_name 
   delay_seconds = var.delay_seconds
   max_message_size = var.max_message_size
+  sqs_lambda_policy_name = var.sqs_lambda_policy_name
   sqs_policy_description = var.sqs_policy_description
   message_retention_seconds = var.message_retention_seconds
   visibility_timeout_seconds = var.visibility_timeout_seconds
@@ -31,6 +37,7 @@ module "sqs" {
 module "sns" {
   source = "./modules/sns"
   sns_topic_name = var.sns_topic_name
+  sns_email_protocol = var.sns_email_protocol
   sns_policy_description = var.sns_policy_description
   sns_lambda_policy_name = var.sns_lambda_policy_name
   ses_email_identity = module.ses.ses_email_identity
@@ -50,6 +57,8 @@ module "ses" {
 # Config defintion for Lambda
 module "lambda" {
   source = "./modules/lambda"
+  region = var.region
+  lambda_exec_role = var.lambda_exec_role
   sqs_queue_arn = module.sqs.sqs_queue_arn
   sqs_queue_url = module.sqs.sqs_queue_url
   sns_topic_arn = module.sns.sns_topic_arn

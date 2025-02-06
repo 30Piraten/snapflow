@@ -1,3 +1,4 @@
+# GENERAL CONFIG DEFINITION
 variable "region" {
   type    = string
   default = "us-east-1"
@@ -12,6 +13,16 @@ variable "environment" {
 variable "force_destroy" {
   type    = bool
   default = true
+}
+
+variable "s3_bucket_iam_role" {
+  type = string 
+  default = "s3_iam_role"
+}
+
+variable "s3_ksm_description" {
+  type = string 
+  default = "This key is used to encrypt the processed photos"
 }
 
 variable "bucket_name" {
@@ -38,6 +49,21 @@ variable "dynamodb_name" {
 variable "billing_mode" {
   type    = string
   default = "PAY_PER_REQUEST"
+}
+
+variable "dynamodb_iam_role_name" {
+  type = string 
+  default = "snapflow-dynamodb-role"
+}
+
+variable "dynamodb_iam_policy_name" {
+  type = string 
+  default = "snapflow-dynamodb-policy"
+}
+
+variable "dynamodb_iam_policy_description" {
+  type = string 
+  default = "IAM policy for DynamoDB permissions"
 }
 
 # SQS QUEUE DEFINITION
@@ -87,6 +113,11 @@ variable "sns_policy_description" {
   default = "SNS-Lambda policy"
 }
 
+variable "sns_email_protocol" {
+  type = string 
+  default = "email-json"
+}
+
 # SES CONFIG DEFINITION
 variable "ses_email" {
   type = string 
@@ -101,4 +132,15 @@ variable "ses_policy_name" {
 variable "ses_policy_description" {
   type = string 
   default = "SES Policy for sending emails"
+}
+
+# LAMBDA CONFIG DEFINITION
+variable "lambda_exec_role" {
+  type = string 
+  default = "lambda-exec-role"
+}
+
+variable "sqs_lambda_policy_name" {
+  type = string 
+  default = "lambda-sqs-policy"
 }
