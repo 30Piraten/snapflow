@@ -1,0 +1,105 @@
+.form-container {
+    max-width: 600px;
+    margin: 2rem auto;
+    padding: 2rem;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+input[type="text"],
+select {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+input[type="file"] {
+    padding: 0.5rem 0;
+}
+
+.submit-btn {
+    background-color: #007bff;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.submit-btn:hover {
+    background-color: #0056b3;
+}
+
+h1 {
+    color: red;
+    text-align: center;
+}
+
+p {
+    color : red;
+    text-align: center;
+}
+
+.error-message {
+    color: red;
+    margin-bottom: 1em;
+    font-weight: bold;
+}
+
+.spinner {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    transform: translate(-50%, -50%);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    /* display: none; */
+    padding: 20px;
+    border-radius: 10px;
+    z-index: 1000;
+    background-color: rgb(15, 95, 166);
+    transition: 0.75s, visibulity 0.75s;
+}
+
+.spinner-hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.actual-spinner::after {
+    content: "";
+    width: 40px;
+    height: 40px;
+    border: 5px solid #007bff;
+    border-top-color: chocolate;
+    border-radius: 25%;
+    animation: loading 0.75s ease infinite;
+}
+
+
+@keyframes loading {
+    from {
+        transform: rotate(0turn);
+    }
+    to {
+        transform: rotate(1turn);
+    }
+}
