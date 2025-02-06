@@ -9,4 +9,4 @@ terraform.tfvars
 terraform.tfvars.json                 
 
 docs/mainproject.md
-/tmp
+/src/tmp
