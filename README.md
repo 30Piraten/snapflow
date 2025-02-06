@@ -1,7 +1,7 @@
-# SnapFlow - Senior-Level Documentation
+# SnapFlow - Sprint Print Documentation
 
 ## 1. Overview
-**Project Name:** SnapFlow (Sprint Print)
+**Project Name:** SnapFlow - Sprint Print (Sprint Print is a budget-friendly, express editing and printing service.)
 
 **Description:** A cloud-based photo printing workflow that allows users to upload, process, and print photos, with automated tracking and customer notifications. 
 
