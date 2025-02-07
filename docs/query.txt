@@ -9,6 +9,7 @@ Generates a presigned URL for S3 upload.
 Uploads the resized photo to Amazon S3.
 Updates DynamoDB with initial order information (including S3 location).
 Sends a print job request to Amazon SQS.
+
 3. Amazon S3 (Processed Photos):
 
 Stores the resized/edited photos.

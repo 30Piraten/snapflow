@@ -68,7 +68,7 @@ func SendPrintRequest(customerEmail, photoID, processedS3Location string) error 
 		}
 
 		// This is intentional. For some weird reason I had a wrapped network
-		// error. Was trying to unwrap and examine the root cause.
+		// error with SQS. Was trying to unwrap and examine the root cause.
 		if previousError != nil {
 			// Log the original error
 			log.Printf("Original error: %v", err)

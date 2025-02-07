@@ -37,7 +37,7 @@ func SendSNSNotification(orderID, orderEmail string) error {
 
 	order_update := os.Getenv("ORDER_UPDATE")
 
-	message := fmt.Sprintf("Your order (ID: %s) has been processed! Thank you for your order. We will notify you when your order is ready for pickup.", orderID)
+	message := fmt.Sprintf("Your order (ID: %s) has been processed! We will notify you when it is ready for pickup.", orderID)
 
 	input := &sns.PublishInput{
 		Message:  aws.String(message),

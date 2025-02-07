@@ -22,7 +22,6 @@ I wanted to simulate the process of the sprint print in the editing department, 
 
 ## 2. System Architecture
 ### 2.1 Workflow Diagram
-_(Include both text-based and visual representations)_
 <!-- ![snapflow arch](../arc/snapflow.png) -->
 ![snapflow2 arch](../arc/snapflow2.png)
 
