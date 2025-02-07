@@ -195,12 +195,8 @@ SnapFlow's testing includes:
 - ✅ End-to-End (E2E) Tests – Simulate the full workflow
 - ✅ AWS Debugging – Check S3, SQS, Lambda, and DynamoDB
 
-- **Unit Tests**: Validate core functions like image resizing and S3 uploads.
-- **Integration Tests**: Ensure smooth communication between the backend and AWS services.
-- **E2E Tests**: Simulate a full user journey from photo upload to print completion.
-
-- For tests code see: **[tests](./test/)**
-- For detailed test cases including AWS debugging, and execution steps see: **[docs](./docs/tests.md)**
+For detailed test cases including AWS debugging, and execution steps see: **[docs](./docs/tests.md)**. 
+And for tests code checkout: **[tests](./test/)**
 
 ## 6. Future Enhancements
 - Add customer dashboard for tracking.
