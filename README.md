@@ -156,12 +156,22 @@ uploaded → processing → printed
     2. Setting up the `.env` file:
         - Use the predifined .env variables above
     3. Running the Go backend:
-        - For the backend, you can have [Air](https://github.com/air-verse/air) installed then run `air` or `go run main.go` from the terminal.
+        - For the backend, you can have [Air](https://github.com/air-verse/air) installed then run:
+        
+         ```
+         air or 
+         go run main.go
+         ``` 
+         
+        from the terminal.
     4. Deploying infrastructure using Terraform:
         - to deploy the defined AWS services config with terraform
         run  the following command: x
-            - `terraform init && terraform validate` 
-            - `terraform plan && terraform apply`
+
+        ```
+        terraform init && terraform validate
+        terraform plan && terraform apply
+        ```
 
 ## 4. Backend API
 ### 4.1 Endpoints
