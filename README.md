@@ -148,17 +148,18 @@ uploaded → processing → printed
   - `SNS_TOPIC_ARN`
 
 ### 3.3 Deploying AWS Infrastructure
-  - **Step-by-Step Setup**:
-     - Cloning the repository
-        - `git clone git@github.com:30Piraten/snapflow.git`
-     - Setting up the `.env` file
+  - **Step-by-Step Setup**
+    1. Cloning the repository:
+        ```
+        git clone git@github.com:30Piraten/snapflow.git
+        ```
+    2. Setting up the `.env` file:
         - Use the predifined .env variables above
-     - Running the Go backend
-        - for the backend, you can have air installed and run `air`(see repo: ) from the src/ dir
-          or you can run `go run main.go || go run .` from the src/ dir
-     - Deploying infrastructure using Terraform
+    3. Running the Go backend:
+        - For the backend, you can have [Air](https://github.com/air-verse/air) installed and run `air or go run main.go` from the **[src](./src/)** dir.
+    4. Deploying infrastructure using Terraform:
         - to deploy the defined AWS services config with terraform
-        run  the following command: 
+        run  the following command: x
             - `terraform init && terraform validate` 
             - `terraform plan && terraform apply`
 
@@ -171,11 +172,11 @@ uploaded → processing → printed
 | GET | `/status/:photo_id` | Retrieves print status |
 
 ### 4.2 Key Functions -> tell us what the key functions do 
-- `ResizePhoto()`
-- `GeneratePresignedURL()`
-- `UploadToS3()`
-- `UpdateDynamoDB()`
-- `SendToSQS()`
+- [`ProcessPrintJob()`](./src/lambda/lambda.go): Acts as a dummy printer and updates DynamoDB and sends SNS notification.
+- [`HandleOrderSubmission()`](./src/routes/order.go): This is the main entry point for the order submission process. 
+- [`GeneratePresignedURL()`](./src/url/presigned_url.go): Generates a pre-signed URL for the given order details.
+- [`UploadToS3()`](./src/config/s3.go): Uploads resized photos using the pre-signed URL to an S3 bucket. 
+- [`SendPrintRequest()`](./src/config/sqs.go): Sends a print job request from the backend to SQS.
 
 ### 5. Error Handling -> add to future enhancements 
 - Retry logic for SQS failures
