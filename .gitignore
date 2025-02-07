@@ -1,11 +1,11 @@
 src/extras
 src/.env
 
-*.tfstate            
-.terraform/*         
-.terraform.lock.hcl
-*.tfstate.backup      
-terraform.tfvars     
+/terraform/*.tfstate            
+/terraform/.terraform/*         
+/terraform/.terraform.lock.hcl
+/terraform/*.tfstate.backup      
+/terraform/terraform.tfvars     
 terraform.tfvars.json                 
 
 docs/mainproject.md
