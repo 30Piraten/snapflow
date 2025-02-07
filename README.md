@@ -163,7 +163,6 @@ uploaded → processing → printed
             - `terraform init && terraform validate` 
             - `terraform plan && terraform apply`
 
-
 ## 4. Backend API
 ### 4.1 Endpoints
 | Method | Endpoint | Description |
@@ -171,16 +170,27 @@ uploaded → processing → printed
 | POST | `/submit-order` | Uploads photo and customer info |
 | GET | `/status/:photo_id` | Retrieves print status |
 
-### 4.2 Key Functions -> tell us what the key functions do 
+### 4.2 Key Functions
 - [`ProcessPrintJob()`](./src/lambda/lambda.go): Acts as a dummy printer and updates DynamoDB and sends SNS notification.
 - [`HandleOrderSubmission()`](./src/routes/order.go): This is the main entry point for the order submission process. 
 - [`GeneratePresignedURL()`](./src/url/presigned_url.go): Generates a pre-signed URL for the given order details.
 - [`UploadToS3()`](./src/config/s3.go): Uploads resized photos using the pre-signed URL to an S3 bucket. 
 - [`SendPrintRequest()`](./src/config/sqs.go): Sends a print job request from the backend to SQS.
 
-## 5. Testing & Debugging
-- Testing and AWS debugging can be found here: **[tests](./test/)**
-- You can peruse the docs for tests here: **[docs](./docs/tests.md)**
+## 5. 📌 Testing & Debugging
+SnapFlow's testing includes:
+
+- ✅ Unit Tests – Validate individual functions
+- ✅ Integration Tests – Verify backend interactions with AWS
+- ✅ End-to-End (E2E) Tests – Simulate the full workflow
+- ✅ AWS Debugging – Check S3, SQS, Lambda, and DynamoDB
+
+- **Unit Tests**: Validate core functions like image resizing and S3 uploads.
+- **Integration Tests**: Ensure smooth communication between the backend and AWS services.
+- **E2E Tests**: Simulate a full user journey from photo upload to print completion.
+
+- For tests code see: **[tests](./test/)**
+- For detailed test cases including AWS debugging, and execution steps see: **[docs](./docs/tests.md)**
 
 ## 6. Future Enhancements
 - Add customer dashboard for tracking.
