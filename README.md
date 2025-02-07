@@ -17,7 +17,7 @@ Company X operates through four major divisions:
 2.  **Editing:** The Editing Department (where I worked) is responsible for all photo enhancements, ranging from cropping and resizing to color correction and sharpness adjustments. No edits can be made without an order/payment receipt.
 Upon receiving a receipt, the editor or retoucher scans or uploads the photos and organizes them into a timestamped folder structure for tracking. This ensures that all edits are documented, allowing for easy rollback in case of errors.
 My department specializes in Sprint Print, a budget-friendly, express editing and printing service. Sprint Print prioritizes only two key editing operations:
-    - Color correction
+    - Color correction (I removed the color correction logic, it was unnecessary at this point)
     - Resizing
 
     Photos designated for Sprint Print are marked accordingly before being sent to the Printing Department.
@@ -156,7 +156,7 @@ uploaded → processing → printed
     2. Setting up the `.env` file:
         - Use the predifined .env variables above
     3. Running the Go backend:
-        - For the backend, you can have [Air](https://github.com/air-verse/air) installed and run `air or go run main.go` from the **[src](./src/)** dir.
+        - For the backend, you can have [Air](https://github.com/air-verse/air) installed then run `air` or `go run main.go` from the terminal.
     4. Deploying infrastructure using Terraform:
         - to deploy the defined AWS services config with terraform
         run  the following command: x
@@ -168,7 +168,7 @@ uploaded → processing → printed
 ### 4.1 Endpoints
 | Method | Endpoint | Description |
 |--------|---------|-------------|
-| POST | `/upload` | Uploads photo and customer info |
+| POST | `/submit-order` | Uploads photo and customer info |
 | GET | `/status/:photo_id` | Retrieves print status |
 
 ### 4.2 Key Functions -> tell us what the key functions do 
@@ -178,32 +178,16 @@ uploaded → processing → printed
 - [`UploadToS3()`](./src/config/s3.go): Uploads resized photos using the pre-signed URL to an S3 bucket. 
 - [`SendPrintRequest()`](./src/config/sqs.go): Sends a print job request from the backend to SQS.
 
-### 5. Error Handling -> add to future enhancements 
+## 5. Testing & Debugging
+- Testing and AWS debugging can be found here: **[tests](./test/)**
+- You can peruse the docs for tests here: **[docs](./docs/tests.md)**
+
+## 6. Future Enhancements
+- Add customer dashboard for tracking.
 - Retry logic for SQS failures
 - DynamoDB update rollback
 
-## 6. Testing & Debugging
-### 6.1 Unit Tests
-- Test `ResizePhoto()` function
-- Test `GeneratePresignedURL()`
-
-### 6.2 Integration Tests
-- Simulate photo upload
-- Manually check S3 and DynamoDB entries
-
-### 6.3 AWS-Specific Debugging
-- Checking SQS logs
-- Debugging Lambda via CloudWatch
-
-## 7. Deployment & CI/CD -> tied to next project
-- Use GitHub Actions for automated deployment.
-- Run Terraform in CI/CD for AWS infrastructure updates.
-
-## 8. Future Enhancements
-- Implement real printing service.
-- Add customer dashboard for tracking.
-
-## 9. Conclusion
+## 7. Conclusion
 - Recap of features and workflow.
 - How to contribute to the project.
 :: This is recap of my 
