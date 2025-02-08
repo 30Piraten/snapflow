@@ -11,7 +11,7 @@ terraform.tfvars.json
 docs/mainproject.md
 docs/arch-flow.md
 docs/query.txt
-docs/snapflow-plan.md 
+docs/snapflow_plan.md
 docs/snapflow.md
 
 /src/tmp
