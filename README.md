@@ -165,8 +165,8 @@ uploaded → processing → printed
          
         from the terminal.
     4. Deploying infrastructure using Terraform:
-        - to deploy the defined AWS services config with terraform
-        run  the following command: x
+        - To deploy the defined AWS services config with terraform
+        run  the following command:
 
         ```
         terraform init && terraform validate
@@ -190,13 +190,13 @@ uploaded → processing → printed
 ## 5. 📌 Testing & Debugging
 SnapFlow's testing includes:
 
-- ✅ Unit Tests – Validate individual functions
-- ✅ Integration Tests – Verify backend interactions with AWS
-- ✅ End-to-End (E2E) Tests – Simulate the full workflow
-- ✅ AWS Debugging – Check S3, SQS, Lambda, and DynamoDB
+- ✅ Terraform Validation & Drift Detection
+- ✅ AWS Service-Specific Tests (S3, SQS, Lambda, DynamoDB)
+- ✅ Integration Tests (End-to-End workflow)
+- ✅ Security Tests (IAM role permissions)
 
-For detailed test cases including AWS debugging, and execution steps see: **[docs](./docs/tests.md)**. 
-And for tests code checkout: **[tests](./test/)**
+For detailed test cases including AWS debugging, and execution steps see: **[docs](./docs/tests_plan.md)**. 
+And for tests results checkout: **[tests](./docs/test_results.md)**
 
 ## 6. Future Enhancements
 - Add customer dashboard for tracking.
