@@ -1,0 +1,1095 @@
+# module.dynamodb.aws_dynamodb_table.customer_data_table:
+resource "aws_dynamodb_table" "customer_data_table" {
+    arn                         = "arn:aws:dynamodb:us-east-1:445567116635:table/processedCustomerTable2025"
+    billing_mode                = "PAY_PER_REQUEST"
+    deletion_protection_enabled = false
+    hash_key                    = "customer_email"
+    id                          = "processedCustomerTable2025"
+    name                        = "processedCustomerTable2025"
+    range_key                   = "photo_id"
+    read_capacity               = 0
+    stream_arn                  = [90mnull[0m[0m
+    stream_enabled              = false
+    stream_label                = [90mnull[0m[0m
+    stream_view_type            = [90mnull[0m[0m
+    table_class                 = "STANDARD"
+    tags                        = {
+        "Environment" = "Production"
+        "Name"        = "CustomerPhotos"
+    }
+    tags_all                    = {
+        "Environment" = "Production"
+        "Name"        = "CustomerPhotos"
+    }
+    write_capacity              = 0
+
+    attribute {
+        name = "customer_email"
+        type = "S"
+    }
+    attribute {
+        name = "customer_name"
+        type = "S"
+    }
+    attribute {
+        name = "paper_type"
+        type = "S"
+    }
+    attribute {
+        name = "photo_id"
+        type = "S"
+    }
+    attribute {
+        name = "photo_size"
+        type = "S"
+    }
+    attribute {
+        name = "photo_status"
+        type = "S"
+    }
+    attribute {
+        name = "processed_location"
+        type = "S"
+    }
+    attribute {
+        name = "upload_timestamp"
+        type = "N"
+    }
+
+    global_secondary_index {
+        hash_key           = "customer_email"
+        name               = "CustomerEmailIndex"
+        non_key_attributes = []
+        projection_type    = "ALL"
+        range_key          = [90mnull[0m[0m
+        read_capacity      = 0
+        write_capacity     = 0
+    }
+    global_secondary_index {
+        hash_key           = "customer_name"
+        name               = "CustomerNameIndex"
+        non_key_attributes = []
+        projection_type    = "ALL"
+        range_key          = [90mnull[0m[0m
+        read_capacity      = 0
+        write_capacity     = 0
+    }
+    global_secondary_index {
+        hash_key           = "paper_type"
+        name               = "PapeType"
+        non_key_attributes = []
+        projection_type    = "ALL"
+        range_key          = [90mnull[0m[0m
+        read_capacity      = 0
+        write_capacity     = 0
+    }
+    global_secondary_index {
+        hash_key           = "photo_size"
+        name               = "PhotoSizeIndex"
+        non_key_attributes = []
+        projection_type    = "ALL"
+        range_key          = [90mnull[0m[0m
+        read_capacity      = 0
+        write_capacity     = 0
+    }
+    global_secondary_index {
+        hash_key           = "photo_status"
+        name               = "PhotoStatusIndex"
+        non_key_attributes = []
+        projection_type    = "ALL"
+        range_key          = [90mnull[0m[0m
+        read_capacity      = 0
+        write_capacity     = 0
+    }
+    global_secondary_index {
+        hash_key           = "processed_location"
+        name               = "ProcessedLocationIndex"
+        non_key_attributes = []
+        projection_type    = "ALL"
+        range_key          = [90mnull[0m[0m
+        read_capacity      = 0
+        write_capacity     = 0
+    }
+
+    local_secondary_index {
+        name               = "UploadTimestampIndex"
+        non_key_attributes = []
+        projection_type    = "ALL"
+        range_key          = "upload_timestamp"
+    }
+
+    point_in_time_recovery {
+        enabled = true
+    }
+
+    ttl {
+        attribute_name = [90mnull[0m[0m
+        enabled        = false
+    }
+}
+
+# module.dynamodb.aws_iam_policy.dynamodb_policy:
+resource "aws_iam_policy" "dynamodb_policy" {
+    arn              = "arn:aws:iam::445567116635:policy/snapflow-dynamodb-policy"
+    attachment_count = 0
+    description      = "IAM policy for DynamoDB permissions"
+    id               = "arn:aws:iam::445567116635:policy/snapflow-dynamodb-policy"
+    name             = "snapflow-dynamodb-policy"
+    name_prefix      = [90mnull[0m[0m
+    path             = "/"
+    policy           = jsonencode(
+        {
+            Statement = [
+                {
+                    Action   = [
+                        "dynamodb:GetItem",
+                        "dynamodb:PutItem",
+                        "dynamodb:Query",
+                        "dynamodb:UpdateItem",
+                    ]
+                    Effect   = "Allow"
+                    Resource = "arn:aws:dynamodb:us-east-1:445567116635:table/processedCustomerTable2025"
+                },
+            ]
+            Version   = "2012-10-17"
+        }
+    )
+    policy_id        = "ANPAWPPO6UVN57Y7MG24T"
+    tags_all         = {}
+}
+
+# module.dynamodb.aws_iam_role.dynamodb_role:
+resource "aws_iam_role" "dynamodb_role" {
+    arn                   = "arn:aws:iam::445567116635:role/snapflow-dynamodb-role"
+    assume_role_policy    = jsonencode(
+        {
+            Statement = [
+                {
+                    Action    = "sts:AssumeRole"
+                    Effect    = "Allow"
+                    Principal = {
+                        Service = "lambda.amazonaws.com"
+                    }
+                },
+            ]
+            Version   = "2012-10-17"
+        }
+    )
+    create_date           = "2025-02-08T05:58:47Z"
+    description           = [90mnull[0m[0m
+    force_detach_policies = false
+    id                    = "snapflow-dynamodb-role"
+    managed_policy_arns   = []
+    max_session_duration  = 3600
+    name                  = "snapflow-dynamodb-role"
+    name_prefix           = [90mnull[0m[0m
+    path                  = "/"
+    permissions_boundary  = [90mnull[0m[0m
+    tags_all              = {}
+    unique_id             = "AROAWPPO6UVN77EK7GP24"
+}
+
+# module.dynamodb.aws_iam_role_policy_attachment.dynamodb_role_attachment:
+resource "aws_iam_role_policy_attachment" "dynamodb_role_attachment" {
+    id         = "snapflow-dynamodb-role-20250208055916072100000004"
+    policy_arn = "arn:aws:iam::445567116635:policy/snapflow-dynamodb-policy"
+    role       = "snapflow-dynamodb-role"
+}
+# module.lambda.data.aws_caller_identity.account:
+data "aws_caller_identity" "account" {
+    account_id = "445567116635"
+    arn        = "arn:aws:iam::445567116635:user/Administrator"
+    id         = "445567116635"
+    user_id    = "AIDAWPPO6UVNY4BLALYDJ"
+}
+
+# module.lambda.data.aws_iam_policy_document.lambda_policy_document:
+data "aws_iam_policy_document" "lambda_policy_document" {
+    id            = "985480079"
+    json          = jsonencode(
+        {
+            Statement = [
+                {
+                    Action   = [
+                        "sqs:SendMessage",
+                        "sqs:ReceiveMessage",
+                        "sqs:GetQueueAttributes",
+                        "sqs:DeleteMessage",
+                    ]
+                    Effect   = "Allow"
+                    Resource = "arn:aws:sqs:us-east-1:445567116635:snapflow-photo-print-queue"
+                },
+                {
+                    Action   = "sns:Publish"
+                    Effect   = "Allow"
+                    Resource = "arn:aws:sns:us-east-1:445567116635:snapflowSNSTopic"
+                },
+                {
+                    Action   = "dynamodb:UpdateItem"
+                    Effect   = "Allow"
+                    Resource = "arn:aws:dynamodb:us-east-1:445567116635:table/processedCustomerTable2025"
+                },
+                {
+                    Action   = [
+                        "logs:PutLogEvents",
+                        "logs:CreateLogStream",
+                        "logs:CreateLogGroup",
+                    ]
+                    Effect   = "Allow"
+                    Resource = "arn:aws:logs:us-east-1:445567116635:log-group:/aws/lambda/dummyPrinter:*"
+                },
+            ]
+            Version   = "2012-10-17"
+        }
+    )
+    minified_json = jsonencode(
+        {
+            Statement = [
+                {
+                    Action   = [
+                        "sqs:SendMessage",
+                        "sqs:ReceiveMessage",
+                        "sqs:GetQueueAttributes",
+                        "sqs:DeleteMessage",
+                    ]
+                    Effect   = "Allow"
+                    Resource = "arn:aws:sqs:us-east-1:445567116635:snapflow-photo-print-queue"
+                },
+                {
+                    Action   = "sns:Publish"
+                    Effect   = "Allow"
+                    Resource = "arn:aws:sns:us-east-1:445567116635:snapflowSNSTopic"
+                },
+                {
+                    Action   = "dynamodb:UpdateItem"
+                    Effect   = "Allow"
+                    Resource = "arn:aws:dynamodb:us-east-1:445567116635:table/processedCustomerTable2025"
+                },
+                {
+                    Action   = [
+                        "logs:PutLogEvents",
+                        "logs:CreateLogStream",
+                        "logs:CreateLogGroup",
+                    ]
+                    Effect   = "Allow"
+                    Resource = "arn:aws:logs:us-east-1:445567116635:log-group:/aws/lambda/dummyPrinter:*"
+                },
+            ]
+            Version   = "2012-10-17"
+        }
+    )
+    version       = "2012-10-17"
+
+    statement {
+        actions       = [
+            "sqs:DeleteMessage",
+            "sqs:GetQueueAttributes",
+            "sqs:ReceiveMessage",
+            "sqs:SendMessage",
+        ]
+        effect        = "Allow"
+        not_actions   = []
+        not_resources = []
+        resources     = [
+            "arn:aws:sqs:us-east-1:445567116635:snapflow-photo-print-queue",
+        ]
+        sid           = [90mnull[0m[0m
+    }
+    statement {
+        actions       = [
+            "sns:Publish",
+        ]
+        effect        = "Allow"
+        not_actions   = []
+        not_resources = []
+        resources     = [
+            "arn:aws:sns:us-east-1:445567116635:snapflowSNSTopic",
+        ]
+        sid           = [90mnull[0m[0m
+    }
+    statement {
+        actions       = [
+            "dynamodb:UpdateItem",
+        ]
+        effect        = "Allow"
+        not_actions   = []
+        not_resources = []
+        resources     = [
+            "arn:aws:dynamodb:us-east-1:445567116635:table/processedCustomerTable2025",
+        ]
+        sid           = [90mnull[0m[0m
+    }
+    statement {
+        actions       = [
+            "logs:CreateLogGroup",
+            "logs:CreateLogStream",
+            "logs:PutLogEvents",
+        ]
+        effect        = "Allow"
+        not_actions   = []
+        not_resources = []
+        resources     = [
+            "arn:aws:logs:us-east-1:445567116635:log-group:/aws/lambda/dummyPrinter:*",
+        ]
+        sid           = [90mnull[0m[0m
+    }
+}
+
+# module.lambda.aws_iam_policy.lambda_policy:
+resource "aws_iam_policy" "lambda_policy" {
+    arn              = "arn:aws:iam::445567116635:policy/lambda-iam-policy"
+    attachment_count = 0
+    description      = "Lambda permissions to interact with SQS, DynamoDB and SNS"
+    id               = "arn:aws:iam::445567116635:policy/lambda-iam-policy"
+    name             = "lambda-iam-policy"
+    name_prefix      = [90mnull[0m[0m
+    path             = "/"
+    policy           = jsonencode(
+        {
+            Statement = [
+                {
+                    Action   = [
+                        "sqs:SendMessage",
+                        "sqs:ReceiveMessage",
+                        "sqs:GetQueueAttributes",
+                        "sqs:DeleteMessage",
+                    ]
+                    Effect   = "Allow"
+                    Resource = "arn:aws:sqs:us-east-1:445567116635:snapflow-photo-print-queue"
+                },
+                {
+                    Action   = "sns:Publish"
+                    Effect   = "Allow"
+                    Resource = "arn:aws:sns:us-east-1:445567116635:snapflowSNSTopic"
+                },
+                {
+                    Action   = "dynamodb:UpdateItem"
+                    Effect   = "Allow"
+                    Resource = "arn:aws:dynamodb:us-east-1:445567116635:table/processedCustomerTable2025"
+                },
+                {
+                    Action   = [
+                        "logs:PutLogEvents",
+                        "logs:CreateLogStream",
+                        "logs:CreateLogGroup",
+                    ]
+                    Effect   = "Allow"
+                    Resource = "arn:aws:logs:us-east-1:445567116635:log-group:/aws/lambda/dummyPrinter:*"
+                },
+            ]
+            Version   = "2012-10-17"
+        }
+    )
+    policy_id        = "ANPAWPPO6UVNTGZRKESIG"
+    tags_all         = {}
+}
+
+# module.lambda.aws_iam_role.lambda_exec_role:
+resource "aws_iam_role" "lambda_exec_role" {
+    arn                   = "arn:aws:iam::445567116635:role/lambda-exec-role"
+    assume_role_policy    = jsonencode(
+        {
+            Statement = [
+                {
+                    Action    = "sts:AssumeRole"
+                    Effect    = "Allow"
+                    Principal = {
+                        Service = "lambda.amazonaws.com"
+                    }
+                },
+            ]
+            Version   = "2012-10-17"
+        }
+    )
+    create_date           = "2025-02-08T05:58:47Z"
+    description           = [90mnull[0m[0m
+    force_detach_policies = false
+    id                    = "lambda-exec-role"
+    managed_policy_arns   = []
+    max_session_duration  = 3600
+    name                  = "lambda-exec-role"
+    name_prefix           = [90mnull[0m[0m
+    path                  = "/"
+    permissions_boundary  = [90mnull[0m[0m
+    tags_all              = {}
+    unique_id             = "AROAWPPO6UVNUWORTN66D"
+}
+
+# module.lambda.aws_iam_role_policy_attachment.lambda_policy_attachment:
+resource "aws_iam_role_policy_attachment" "lambda_policy_attachment" {
+    id         = "lambda-exec-role-20250208055941493800000006"
+    policy_arn = "arn:aws:iam::445567116635:policy/lambda-iam-policy"
+    role       = "lambda-exec-role"
+}
+
+# module.lambda.aws_lambda_event_source_mapping.sqs_to_lambda:
+resource "aws_lambda_event_source_mapping" "sqs_to_lambda" {
+    arn                                = "arn:aws:lambda:us-east-1:445567116635:event-source-mapping:cba0819c-7243-4b36-82e1-249c7618a0d8"
+    batch_size                         = 10
+    bisect_batch_on_function_error     = false
+    enabled                            = true
+    event_source_arn                   = "arn:aws:sqs:us-east-1:445567116635:snapflow-photo-print-queue"
+    function_arn                       = "arn:aws:lambda:us-east-1:445567116635:function:dummyPrinter"
+    function_name                      = "arn:aws:lambda:us-east-1:445567116635:function:dummyPrinter"
+    id                                 = "cba0819c-7243-4b36-82e1-249c7618a0d8"
+    kms_key_arn                        = [90mnull[0m[0m
+    last_modified                      = "2025-02-08T05:59:40Z"
+    last_processing_result             = [90mnull[0m[0m
+    maximum_batching_window_in_seconds = 0
+    maximum_record_age_in_seconds      = 0
+    maximum_retry_attempts             = 0
+    parallelization_factor             = 0
+    starting_position                  = [90mnull[0m[0m
+    starting_position_timestamp        = [90mnull[0m[0m
+    state                              = "Enabled"
+    state_transition_reason            = "USER_INITIATED"
+    tags_all                           = {}
+    tumbling_window_in_seconds         = 0
+    uuid                               = "cba0819c-7243-4b36-82e1-249c7618a0d8"
+}
+
+# module.lambda.aws_lambda_function.dummy_print_service:
+resource "aws_lambda_function" "dummy_print_service" {
+    architectures                  = [
+        "x86_64",
+    ]
+    arn                            = "arn:aws:lambda:us-east-1:445567116635:function:dummyPrinter"
+    code_sha256                    = "uX11mufiE1euTx2ZAZJaUJeCIPaifgPwfHRapJuLiuo="
+    code_signing_config_arn        = [90mnull[0m[0m
+    description                    = [90mnull[0m[0m
+    filename                       = "../src/lambda/dummyprinter.zip"
+    function_name                  = "dummyPrinter"
+    handler                        = "bootstrap"
+    id                             = "dummyPrinter"
+    image_uri                      = [90mnull[0m[0m
+    invoke_arn                     = "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:445567116635:function:dummyPrinter/invocations"
+    kms_key_arn                    = [90mnull[0m[0m
+    last_modified                  = "2025-02-08T05:59:32.592+0000"
+    memory_size                    = 128
+    package_type                   = "Zip"
+    publish                        = false
+    qualified_arn                  = "arn:aws:lambda:us-east-1:445567116635:function:dummyPrinter:$LATEST"
+    qualified_invoke_arn           = "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:445567116635:function:dummyPrinter:$LATEST/invocations"
+    reserved_concurrent_executions = -1
+    role                           = "arn:aws:iam::445567116635:role/lambda-exec-role"
+    runtime                        = "provided.al2"
+    signing_job_arn                = [90mnull[0m[0m
+    signing_profile_version_arn    = [90mnull[0m[0m
+    skip_destroy                   = false
+    source_code_hash               = [90mnull[0m[0m
+    source_code_size               = 8074799
+    tags_all                       = {}
+    timeout                        = 60
+    version                        = "$LATEST"
+
+    environment {
+        variables = {
+            "AWS_LAMBDA_EXEC_WRAPPER" = "/opt/bootstrap"
+            "DYNAMODB_TABLE_NAME"     = "processedCustomerTable2025"
+            "SNS_TOPIC_ARN"           = "arn:aws:sns:us-east-1:445567116635:snapflowSNSTopic"
+            "SQS_QUEUE_URL"           = "https://sqs.us-east-1.amazonaws.com/445567116635/snapflow-photo-print-queue"
+        }
+    }
+
+    ephemeral_storage {
+        size = 512
+    }
+
+    logging_config {
+        application_log_level = [90mnull[0m[0m
+        log_format            = "Text"
+        log_group             = "/aws/lambda/dummyPrinter"
+        system_log_level      = [90mnull[0m[0m
+    }
+
+    tracing_config {
+        mode = "PassThrough"
+    }
+}
+# module.s3.aws_iam_role.iam_role:
+resource "aws_iam_role" "iam_role" {
+    arn                   = "arn:aws:iam::445567116635:role/s3_iam_role"
+    assume_role_policy    = jsonencode(
+        {
+            Statement = [
+                {
+                    Action    = "sts:AssumeRole"
+                    Effect    = "Allow"
+                    Principal = {
+                        Service = "lambda.amazonaws.com"
+                    }
+                },
+            ]
+            Version   = "2012-10-17"
+        }
+    )
+    create_date           = "2025-02-08T05:58:47Z"
+    description           = [90mnull[0m[0m
+    force_detach_policies = false
+    id                    = "s3_iam_role"
+    managed_policy_arns   = []
+    max_session_duration  = 3600
+    name                  = "s3_iam_role"
+    name_prefix           = [90mnull[0m[0m
+    path                  = "/"
+    permissions_boundary  = [90mnull[0m[0m
+    tags                  = {
+        "Environment" = "Production"
+        "Name"        = "s3_iam_role"
+    }
+    tags_all              = {
+        "Environment" = "Production"
+        "Name"        = "s3_iam_role"
+    }
+    unique_id             = "AROAWPPO6UVN7BYO2TPU4"
+}
+
+# module.s3.aws_iam_role_policy.iam_role_policy:
+resource "aws_iam_role_policy" "iam_role_policy" {
+    id          = "s3_iam_role:terraform-20250208055852048500000003"
+    name        = "terraform-20250208055852048500000003"
+    name_prefix = "terraform-"
+    policy      = jsonencode(
+        {
+            Statement = [
+                {
+                    Action   = [
+                        "s3:GetObject",
+                        "s3:PutObject",
+                        "s3:ListBucket",
+                        "s3:ListObject",
+                    ]
+                    Effect   = "Allow"
+                    Resource = [
+                        "arn:aws:s3:::snaps3flowbucket02025/*",
+                    ]
+                },
+            ]
+            Version   = "2012-10-17"
+        }
+    )
+    role        = "s3_iam_role"
+}
+
+# module.s3.aws_kms_key.processed_kms_sse:
+resource "aws_kms_key" "processed_kms_sse" {
+    arn                                = "arn:aws:kms:us-east-1:445567116635:key/1705451a-dc16-4fc7-a31b-22c8390573e1"
+    bypass_policy_lockout_safety_check = false
+    custom_key_store_id                = [90mnull[0m[0m
+    customer_master_key_spec           = "SYMMETRIC_DEFAULT"
+    deletion_window_in_days            = 7
+    description                        = "This key is used to encrypt the processed photos"
+    enable_key_rotation                = true
+    id                                 = "1705451a-dc16-4fc7-a31b-22c8390573e1"
+    is_enabled                         = true
+    key_id                             = "1705451a-dc16-4fc7-a31b-22c8390573e1"
+    key_usage                          = "ENCRYPT_DECRYPT"
+    multi_region                       = false
+    policy                             = jsonencode(
+        {
+            Id        = "key-default-1"
+            Statement = [
+                {
+                    Action    = "kms:*"
+                    Effect    = "Allow"
+                    Principal = {
+                        AWS = "arn:aws:iam::445567116635:root"
+                    }
+                    Resource  = "*"
+                    Sid       = "Enable IAM User Permissions"
+                },
+            ]
+            Version   = "2012-10-17"
+        }
+    )
+    rotation_period_in_days            = 365
+    tags_all                           = {}
+    xks_key_id                         = [90mnull[0m[0m
+}
+
+# module.s3.aws_s3_bucket.processed_image_bucket:
+resource "aws_s3_bucket" "processed_image_bucket" {
+    acceleration_status         = [90mnull[0m[0m
+    arn                         = "arn:aws:s3:::snaps3flowbucket02025"
+    bucket                      = "snaps3flowbucket02025"
+    bucket_domain_name          = "snaps3flowbucket02025.s3.amazonaws.com"
+    bucket_prefix               = [90mnull[0m[0m
+    bucket_regional_domain_name = "snaps3flowbucket02025.s3.us-east-1.amazonaws.com"
+    force_destroy               = true
+    hosted_zone_id              = "Z3AQBSTGFYJSTF"
+    id                          = "snaps3flowbucket02025"
+    object_lock_enabled         = false
+    policy                      = [90mnull[0m[0m
+    region                      = "us-east-1"
+    request_payer               = "BucketOwner"
+    tags                        = {
+        "Environment" = "Production"
+        "Name"        = "snaps3flowbucket02025"
+    }
+    tags_all                    = {
+        "Environment" = "Production"
+        "Name"        = "snaps3flowbucket02025"
+    }
+
+    grant {
+        id          = "012a0c47fa35f8f2b3407136b38b7f6289b34c1cce4d68ad2e73320654598a02"
+        permissions = [
+            "FULL_CONTROL",
+        ]
+        type        = "CanonicalUser"
+        uri         = [90mnull[0m[0m
+    }
+
+    server_side_encryption_configuration {
+        rule {
+            bucket_key_enabled = false
+
+            apply_server_side_encryption_by_default {
+                kms_master_key_id = [90mnull[0m[0m
+                sse_algorithm     = "AES256"
+            }
+        }
+    }
+
+    versioning {
+        enabled    = false
+        mfa_delete = false
+    }
+}
+
+# module.s3.aws_s3_bucket_lifecycle_configuration.processedS3_bucket_lifecycle:
+resource "aws_s3_bucket_lifecycle_configuration" "processedS3_bucket_lifecycle" {
+    bucket                                 = "snaps3flowbucket02025"
+    expected_bucket_owner                  = [90mnull[0m[0m
+    id                                     = "snaps3flowbucket02025"
+    transition_default_minimum_object_size = "all_storage_classes_128K"
+
+    rule {
+        id     = "expired-processed-photos"
+        prefix = [90mnull[0m[0m
+        status = "Enabled"
+
+        expiration {
+            date                         = [90mnull[0m[0m
+            days                         = 7
+            expired_object_delete_marker = false
+        }
+
+        filter {
+            object_size_greater_than = [90mnull[0m[0m
+            object_size_less_than    = [90mnull[0m[0m
+            prefix                   = [90mnull[0m[0m
+        }
+    }
+}
+
+# module.s3.aws_s3_bucket_public_access_block.processed_bucket_block:
+resource "aws_s3_bucket_public_access_block" "processed_bucket_block" {
+    block_public_acls       = true
+    block_public_policy     = true
+    bucket                  = "snaps3flowbucket02025"
+    id                      = "snaps3flowbucket02025"
+    ignore_public_acls      = true
+    restrict_public_buckets = true
+}
+
+# module.s3.aws_s3_bucket_server_side_encryption_configuration.processedS3_bucket_sse:
+resource "aws_s3_bucket_server_side_encryption_configuration" "processedS3_bucket_sse" {
+    bucket                = "snaps3flowbucket02025"
+    expected_bucket_owner = [90mnull[0m[0m
+    id                    = "snaps3flowbucket02025"
+
+    rule {
+        apply_server_side_encryption_by_default {
+            kms_master_key_id = "1705451a-dc16-4fc7-a31b-22c8390573e1"
+            sse_algorithm     = "aws:kms"
+        }
+    }
+}
+
+# module.s3.aws_s3_bucket_versioning.processed_bucket_version:
+resource "aws_s3_bucket_versioning" "processed_bucket_version" {
+    bucket                = "snaps3flowbucket02025"
+    expected_bucket_owner = [90mnull[0m[0m
+    id                    = "snaps3flowbucket02025"
+
+    versioning_configuration {
+        mfa_delete = [90mnull[0m[0m
+        status     = "Enabled"
+    }
+}
+# module.ses.data.aws_caller_identity.account:
+data "aws_caller_identity" "account" {
+    account_id = "445567116635"
+    arn        = "arn:aws:iam::445567116635:user/Administrator"
+    id         = "445567116635"
+    user_id    = "AIDAWPPO6UVNY4BLALYDJ"
+}
+
+# module.ses.data.aws_iam_policy_document.ses_policy_document:
+data "aws_iam_policy_document" "ses_policy_document" {
+    id            = "1801266258"
+    json          = jsonencode(
+        {
+            Statement = [
+                {
+                    Action   = "ses:SendEmail"
+                    Effect   = "Allow"
+                    Resource = "arn:aws:ses:us-east-1:445567116635:identity:/kioyarautenberg@gmail.com"
+                },
+            ]
+            Version   = "2012-10-17"
+        }
+    )
+    minified_json = jsonencode(
+        {
+            Statement = [
+                {
+                    Action   = "ses:SendEmail"
+                    Effect   = "Allow"
+                    Resource = "arn:aws:ses:us-east-1:445567116635:identity:/kioyarautenberg@gmail.com"
+                },
+            ]
+            Version   = "2012-10-17"
+        }
+    )
+    version       = "2012-10-17"
+
+    statement {
+        actions       = [
+            "ses:SendEmail",
+        ]
+        effect        = "Allow"
+        not_actions   = []
+        not_resources = []
+        resources     = [
+            "arn:aws:ses:us-east-1:445567116635:identity:/kioyarautenberg@gmail.com",
+        ]
+        sid           = [90mnull[0m[0m
+    }
+}
+
+# module.ses.aws_iam_policy.ses_policy:
+resource "aws_iam_policy" "ses_policy" {
+    arn              = "arn:aws:iam::445567116635:policy/sesSnapflowPolicy"
+    attachment_count = 0
+    description      = "SES Policy for sending emails"
+    id               = "arn:aws:iam::445567116635:policy/sesSnapflowPolicy"
+    name             = "sesSnapflowPolicy"
+    name_prefix      = [90mnull[0m[0m
+    path             = "/"
+    policy           = jsonencode(
+        {
+            Statement = [
+                {
+                    Action   = "ses:SendEmail"
+                    Effect   = "Allow"
+                    Resource = "arn:aws:ses:us-east-1:445567116635:identity:/kioyarautenberg@gmail.com"
+                },
+            ]
+            Version   = "2012-10-17"
+        }
+    )
+    policy_id        = "ANPAWPPO6UVNVPVK4XTMT"
+    tags_all         = {}
+}
+
+# module.ses.aws_iam_role_policy_attachment.ses_policy_attachment:
+resource "aws_iam_role_policy_attachment" "ses_policy_attachment" {
+    id         = "lambda-exec-role-20250208055849458500000001"
+    policy_arn = "arn:aws:iam::445567116635:policy/sesSnapflowPolicy"
+    role       = "lambda-exec-role"
+}
+
+# module.ses.aws_ses_email_identity.ses_email:
+resource "aws_ses_email_identity" "ses_email" {
+    arn   = "arn:aws:ses:us-east-1:445567116635:identity/kioyarautenberg@gmail.com"
+    email = "kioyarautenberg@gmail.com"
+    id    = "kioyarautenberg@gmail.com"
+}
+# module.sns.data.aws_iam_policy_document.sns_policy_document:
+data "aws_iam_policy_document" "sns_policy_document" {
+    id            = "4131822804"
+    json          = jsonencode(
+        {
+            Statement = [
+                {
+                    Action   = "sns:Publish"
+                    Effect   = "Allow"
+                    Resource = "arn:aws:sns:us-east-1:445567116635:snapflowSNSTopic"
+                },
+            ]
+            Version   = "2012-10-17"
+        }
+    )
+    minified_json = jsonencode(
+        {
+            Statement = [
+                {
+                    Action   = "sns:Publish"
+                    Effect   = "Allow"
+                    Resource = "arn:aws:sns:us-east-1:445567116635:snapflowSNSTopic"
+                },
+            ]
+            Version   = "2012-10-17"
+        }
+    )
+    version       = "2012-10-17"
+
+    statement {
+        actions       = [
+            "sns:Publish",
+        ]
+        effect        = "Allow"
+        not_actions   = []
+        not_resources = []
+        resources     = [
+            "arn:aws:sns:us-east-1:445567116635:snapflowSNSTopic",
+        ]
+        sid           = [90mnull[0m[0m
+    }
+}
+
+# module.sns.aws_iam_policy.sns_lambda_policy:
+resource "aws_iam_policy" "sns_lambda_policy" {
+    arn              = "arn:aws:iam::445567116635:policy/snsLambdaPolicy"
+    attachment_count = 0
+    description      = "SNS-Lambda policy"
+    id               = "arn:aws:iam::445567116635:policy/snsLambdaPolicy"
+    name             = "snsLambdaPolicy"
+    name_prefix      = [90mnull[0m[0m
+    path             = "/"
+    policy           = jsonencode(
+        {
+            Statement = [
+                {
+                    Action   = "sns:Publish"
+                    Effect   = "Allow"
+                    Resource = "arn:aws:sns:us-east-1:445567116635:snapflowSNSTopic"
+                },
+            ]
+            Version   = "2012-10-17"
+        }
+    )
+    policy_id        = "ANPAWPPO6UVNWWXNRRYDH"
+    tags_all         = {}
+}
+
+# module.sns.aws_iam_role_policy_attachment.sns_policy_attachment:
+resource "aws_iam_role_policy_attachment" "sns_policy_attachment" {
+    id         = "lambda-exec-role-20250208055851528900000002"
+    policy_arn = "arn:aws:iam::445567116635:policy/snsLambdaPolicy"
+    role       = "lambda-exec-role"
+}
+
+# module.sns.aws_sns_topic.snapflow_sns_topic:
+resource "aws_sns_topic" "snapflow_sns_topic" {
+    application_failure_feedback_role_arn    = [90mnull[0m[0m
+    application_success_feedback_role_arn    = [90mnull[0m[0m
+    application_success_feedback_sample_rate = 0
+    archive_policy                           = [90mnull[0m[0m
+    arn                                      = "arn:aws:sns:us-east-1:445567116635:snapflowSNSTopic"
+    beginning_archive_time                   = [90mnull[0m[0m
+    content_based_deduplication              = false
+    delivery_policy                          = [90mnull[0m[0m
+    display_name                             = [90mnull[0m[0m
+    fifo_topic                               = false
+    firehose_failure_feedback_role_arn       = [90mnull[0m[0m
+    firehose_success_feedback_role_arn       = [90mnull[0m[0m
+    firehose_success_feedback_sample_rate    = 0
+    http_failure_feedback_role_arn           = [90mnull[0m[0m
+    http_success_feedback_role_arn           = [90mnull[0m[0m
+    http_success_feedback_sample_rate        = 0
+    id                                       = "arn:aws:sns:us-east-1:445567116635:snapflowSNSTopic"
+    kms_master_key_id                        = [90mnull[0m[0m
+    lambda_failure_feedback_role_arn         = [90mnull[0m[0m
+    lambda_success_feedback_role_arn         = [90mnull[0m[0m
+    lambda_success_feedback_sample_rate      = 0
+    name                                     = "snapflowSNSTopic"
+    name_prefix                              = [90mnull[0m[0m
+    owner                                    = "445567116635"
+    policy                                   = jsonencode(
+        {
+            Id        = "__default_policy_ID"
+            Statement = [
+                {
+                    Action    = [
+                        "SNS:GetTopicAttributes",
+                        "SNS:SetTopicAttributes",
+                        "SNS:AddPermission",
+                        "SNS:RemovePermission",
+                        "SNS:DeleteTopic",
+                        "SNS:Subscribe",
+                        "SNS:ListSubscriptionsByTopic",
+                        "SNS:Publish",
+                    ]
+                    Condition = {
+                        StringEquals = {
+                            "AWS:SourceOwner" = "445567116635"
+                        }
+                    }
+                    Effect    = "Allow"
+                    Principal = {
+                        AWS = "*"
+                    }
+                    Resource  = "arn:aws:sns:us-east-1:445567116635:snapflowSNSTopic"
+                    Sid       = "__default_statement_ID"
+                },
+            ]
+            Version   = "2008-10-17"
+        }
+    )
+    signature_version                        = 0
+    sqs_failure_feedback_role_arn            = [90mnull[0m[0m
+    sqs_success_feedback_role_arn            = [90mnull[0m[0m
+    sqs_success_feedback_sample_rate         = 0
+    tags_all                                 = {}
+    tracing_config                           = [90mnull[0m[0m
+}
+
+# module.sns.aws_sns_topic_subscription.sns_ses_subscription:
+resource "aws_sns_topic_subscription" "sns_ses_subscription" {
+    arn                             = "arn:aws:sns:us-east-1:445567116635:snapflowSNSTopic:fbcdf5a8-8018-4d36-b4ed-98a5bd0bbe5d"
+    confirmation_timeout_in_minutes = 1
+    confirmation_was_authenticated  = false
+    delivery_policy                 = [90mnull[0m[0m
+    endpoint                        = "kioyarautenberg@gmail.com"
+    endpoint_auto_confirms          = false
+    filter_policy                   = [90mnull[0m[0m
+    filter_policy_scope             = [90mnull[0m[0m
+    id                              = "arn:aws:sns:us-east-1:445567116635:snapflowSNSTopic:fbcdf5a8-8018-4d36-b4ed-98a5bd0bbe5d"
+    owner_id                        = "445567116635"
+    pending_confirmation            = true
+    protocol                        = "email-json"
+    raw_message_delivery            = false
+    redrive_policy                  = [90mnull[0m[0m
+    replay_policy                   = [90mnull[0m[0m
+    subscription_role_arn           = [90mnull[0m[0m
+    topic_arn                       = "arn:aws:sns:us-east-1:445567116635:snapflowSNSTopic"
+}
+# module.sqs.data.aws_iam_policy_document.sqs_role_policy:
+data "aws_iam_policy_document" "sqs_role_policy" {
+    id            = "2504961035"
+    json          = jsonencode(
+        {
+            Statement = [
+                {
+                    Action   = [
+                        "sqs:SendMessage",
+                        "sqs:ReceiveMessage",
+                        "sqs:GetQueueAttributes",
+                        "sqs:DeleteMessage",
+                    ]
+                    Effect   = "Allow"
+                    Resource = "arn:aws:sqs:us-east-1:445567116635:snapflow-photo-print-queue"
+                },
+            ]
+            Version   = "2012-10-17"
+        }
+    )
+    minified_json = jsonencode(
+        {
+            Statement = [
+                {
+                    Action   = [
+                        "sqs:SendMessage",
+                        "sqs:ReceiveMessage",
+                        "sqs:GetQueueAttributes",
+                        "sqs:DeleteMessage",
+                    ]
+                    Effect   = "Allow"
+                    Resource = "arn:aws:sqs:us-east-1:445567116635:snapflow-photo-print-queue"
+                },
+            ]
+            Version   = "2012-10-17"
+        }
+    )
+    version       = "2012-10-17"
+
+    statement {
+        actions       = [
+            "sqs:DeleteMessage",
+            "sqs:GetQueueAttributes",
+            "sqs:ReceiveMessage",
+            "sqs:SendMessage",
+        ]
+        effect        = "Allow"
+        not_actions   = []
+        not_resources = []
+        resources     = [
+            "arn:aws:sqs:us-east-1:445567116635:snapflow-photo-print-queue",
+        ]
+        sid           = [90mnull[0m[0m
+    }
+}
+
+# module.sqs.aws_iam_policy.lambda_sqs_queue:
+resource "aws_iam_policy" "lambda_sqs_queue" {
+    arn              = "arn:aws:iam::445567116635:policy/lambda-sqs-policy"
+    attachment_count = 0
+    description      = "SQS-Lambda policy"
+    id               = "arn:aws:iam::445567116635:policy/lambda-sqs-policy"
+    name             = "lambda-sqs-policy"
+    name_prefix      = [90mnull[0m[0m
+    path             = "/"
+    policy           = jsonencode(
+        {
+            Statement = [
+                {
+                    Action   = [
+                        "sqs:SendMessage",
+                        "sqs:ReceiveMessage",
+                        "sqs:GetQueueAttributes",
+                        "sqs:DeleteMessage",
+                    ]
+                    Effect   = "Allow"
+                    Resource = "arn:aws:sqs:us-east-1:445567116635:snapflow-photo-print-queue"
+                },
+            ]
+            Version   = "2012-10-17"
+        }
+    )
+    policy_id        = "ANPAWPPO6UVNWJMCWSQF6"
+    tags_all         = {}
+}
+
+# module.sqs.aws_iam_role_policy_attachment.lambda_sqs_attachment:
+resource "aws_iam_role_policy_attachment" "lambda_sqs_attachment" {
+    id         = "lambda-exec-role-20250208055916123700000005"
+    policy_arn = "arn:aws:iam::445567116635:policy/lambda-sqs-policy"
+    role       = "lambda-exec-role"
+}
+
+# module.sqs.aws_sqs_queue.print_queue:
+resource "aws_sqs_queue" "print_queue" {
+    arn                               = "arn:aws:sqs:us-east-1:445567116635:snapflow-photo-print-queue"
+    content_based_deduplication       = false
+    deduplication_scope               = [90mnull[0m[0m
+    delay_seconds                     = 0
+    fifo_queue                        = false
+    fifo_throughput_limit             = [90mnull[0m[0m
+    id                                = "https://sqs.us-east-1.amazonaws.com/445567116635/snapflow-photo-print-queue"
+    kms_data_key_reuse_period_seconds = 300
+    kms_master_key_id                 = [90mnull[0m[0m
+    max_message_size                  = 262144
+    message_retention_seconds         = 86400
+    name                              = "snapflow-photo-print-queue"
+    name_prefix                       = [90mnull[0m[0m
+    policy                            = [90mnull[0m[0m
+    receive_wait_time_seconds         = 0
+    redrive_allow_policy              = [90mnull[0m[0m
+    redrive_policy                    = [90mnull[0m[0m
+    sqs_managed_sse_enabled           = true
+    tags_all                          = {}
+    url                               = "https://sqs.us-east-1.amazonaws.com/445567116635/snapflow-photo-print-queue"
+    visibility_timeout_seconds        = 60
+}
+
+
+Outputs:
+
+dynamodb_table_name = "processedCustomerTable2025"
+s3_bucket_name = "snaps3flowbucket02025"
+sns_topic_arn = "arn:aws:sns:us-east-1:445567116635:snapflowSNSTopic"
+sqs_queue_url = "https://sqs.us-east-1.amazonaws.com/445567116635/snapflow-photo-print-queue"
+sqs_queue_url_id = "https://sqs.us-east-1.amazonaws.com/445567116635/snapflow-photo-print-queue"
