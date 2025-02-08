@@ -1,4 +1,3 @@
-
 # **SnapFlow Cloud Test Plan**  
 
 ## **1. Purpose**  
@@ -26,6 +25,18 @@ terraform plan
 terraform apply --auto-approve
 ```
 ✅ **Pass if:** No errors, all AWS resources are created successfully.  
+
+🆕 **✅ Test: Verify Terraform Outputs (Ensure Key Resources Exist)**  
+```sh
+terraform output
+```
+✅ **Pass if:** Outputs contain correct S3 bucket, SQS queue, Lambda function, and DynamoDB table names.  
+
+🆕 **✅ Test: Capture Deployed Resources for Reference**  
+```sh
+terraform show > terraform_deployment.log
+```
+✅ **Pass if:** The log file includes all expected AWS resource configurations.  
 
 #### **✅ Test: Detect Configuration Drift**  
 Ensure AWS infrastructure matches the last applied Terraform state.  
@@ -108,6 +119,13 @@ aws iam get-role-policy --role-name YOUR_ROLE_NAME --policy-name YOUR_POLICY_NAM
 ```
 ✅ **Pass if:** Policy allows **only necessary** actions (`s3:PutObject`, `s3:GetObject`).  
 
+🆕 **✅ Test: Actively Verify IAM Permissions for a Role**  
+```sh
+aws iam simulate-principal-policy --policy-source-arn arn:aws:iam::ACCOUNT_ID:role/YOUR_ROLE_NAME \
+    --action-names s3:PutObject s3:GetObject sqs:SendMessage dynamodb:PutItem
+```
+✅ **Pass if:** Allowed actions return `"decision": "allowed"` and denied actions are restricted.  
+
 #### **✅ Test: Verify No Excessive Permissions for Lambda**  
 ```sh
 aws iam list-attached-role-policies --role-name YOUR_LAMBDA_ROLE
@@ -164,16 +182,21 @@ curl -X POST "http://YOUR_API_URL/submit-order" -F "photo=@test-image.jpg" -F "n
 ```
 Then verify S3, SQS, Lambda, and DynamoDB as per previous steps.  
 
+🆕 **4️⃣ Capture Test Results for Documentation**  
+- **Save terminal output for proof**  
+  ```sh
+  terraform show > terraform_deployment.log
+  aws s3 ls s3://YOUR_BUCKET_NAME/ > s3_results.log
+  aws logs tail /aws/lambda/YOUR_LAMBDA_FUNCTION > lambda_logs.log
+  ```
+- **Take AWS Console Screenshots (If Required)**  
+  - S3 bucket with uploaded file  
+  - DynamoDB table with processed order  
+  - CloudWatch logs showing Lambda execution  
+
 ---
 
 ## **6. Conclusion**  
 This **cloud-focused test plan** ensures SnapFlow’s **AWS infrastructure, security, and service interactions work as expected** before deployment.  
-
----
-
-### **What You Get with This Approach**
-✅ **Only cloud tests relevant to a Cloud Engineer/Architect**  
-✅ **Covers AWS infrastructure, service integration, and security**  
-✅ **Clear steps to execute tests without unnecessary complexity**  
 
 ---
