@@ -30,3 +30,19 @@ variable "sqs_queue_url" {
 variable "sns_topic_arn" {
   type = string 
 }
+
+variable "ses_email" {
+  type = string 
+}
+
+variable "s3_processed_image_bucket_id" {
+  type = string 
+}
+
+variable "lambda_polic_name" {
+  type = string 
+}
+
+variable "lambda_policy_description" {
+  type = string 
+}

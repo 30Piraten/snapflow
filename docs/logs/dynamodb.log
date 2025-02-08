@@ -1,0 +1,53 @@
+{
+    "Items": [
+        {
+            "paper_size": {
+                "S": "4X6"
+            },
+            "paper_type": {
+                "S": "matte"
+            },
+            "photo_id": {
+                "S": "08bbe5cb-f541-4444-aedf-b9b3ce8ccfe0"
+            },
+            "upload_timestamp": {
+                "N": "1738997971"
+            },
+            "customer_email": {
+                "S": "victoraeva@gmail.com"
+            },
+            "customer_fullname": {
+                "S": "Charles Raeva"
+            },
+            "photo_status": {
+                "S": "printed"
+            }
+        },
+        {
+            "paper_size": {
+                "S": "4X6"
+            },
+            "paper_type": {
+                "S": "matte"
+            },
+            "photo_id": {
+                "S": "99fb0cdc-cd98-4133-ab12-69be861cd819"
+            },
+            "upload_timestamp": {
+                "N": "1738996162"
+            },
+            "customer_email": {
+                "S": "victoraeva@gmail.com"
+            },
+            "customer_fullname": {
+                "S": "Charles Raeva"
+            },
+            "photo_status": {
+                "S": "printed"
+            }
+        }
+    ],
+    "Count": 2,
+    "ScannedCount": 2,
+    "ConsumedCapacity": null
+}

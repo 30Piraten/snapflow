@@ -23,8 +23,9 @@ terraform apply --auto-approve
 - **Actual Output:** ✅ Passed. No validation errors.
 
 📌 **Proof:**
-- **Terraform Deployment Log:** [terraform_deployment.log]
+- **Terraform Deployment Log:** [Terraform deployment log](./logs/tf-apply.log)
 
+- **Terraform Output Screenshot:**
 **Terraform Plan:**
 ![Terraform plan output](./screenshot/tf-plan.png)
 
@@ -41,7 +42,8 @@ terraform plan -detailed-exitcode
 ✅ **Pass if:** Exit code is `0` (no drift detected).
 
 📌 **Proof:**
-- **Terraform Output Screenshot:** (Attach image if needed)
+- **Terraform Output Screenshot:**
+![Terraform drift](./screenshot/tf-drift.png)
 
 ---
 –
@@ -54,7 +56,8 @@ terraform output
 **Actual Output:** ✅ Passed. Resources match expectations.
 
 📌 **Proof:**
-- **Terraform Output Screenshot:** (Attach image if needed)
+- **Terraform Output Screenshot:** 
+![Terraform output](./screenshot/tf-output.png)
 
 ---
 
@@ -63,14 +66,19 @@ terraform output
 ### ✅ **Test: Verify S3 Bucket Exists & Public Access is Blocked**
 **Command:**
 ```sh
-aws s3api get-bucket-acl --bucket YOUR_BUCKET_NAME
+aws s3api get-bucket-acl --bucket snaps3flowbucket02025
+aws s3api get-public-access-block --bucket snaps3flowbucket02025
 ```
 **Expected Output:** PublicAccessBlockConfiguration enabled.
 **Actual Output:** ✅ Passed. Public access blocked.
 
 📌 **Proof:**
-- **AWS CLI Output:** [s3_results.log]
-- **AWS Console Screenshot:** (Attach image if needed)
+- **AWS Console Screenshot:**
+
+**S3 Bucket ACL:**
+![Terraform bucket acl](./screenshot/bucket-acl.png)
+**S3 Public Access Block:**
+![Terraform public access block](./screenshot/public-access.png)
 
 ---
 
@@ -85,14 +93,18 @@ aws s3 ls s3://YOUR_BUCKET_NAME/
 
 📌 **Proof:**
 - **AWS CLI Output:** [s3_results.log]
-- **AWS Console Screenshot:** (Attach image if needed)
+![Upload](./screenshot/upload.png)
+
+- **AWS Console Screenshot:** (Attach image if needed) -TODO
 
 ---
 
-### ✅ **Test: Verify SQS Receives Messages**
+### ✅ **Test: Verify SQS Receives Messages** TODO
 **Command:**
 ```sh
-aws sqs receive-message --queue-url YOUR_QUEUE_URL
+aws sqs send-message --queue-url https://sqs.us-east-1.amazonaws.com/445567116635/snapflow-photo-print-queue --message-body "Test Message"
+
+aws sqs receive-message --queue-url https://sqs.us-east-1.amazonaws.com/445567116635/snapflow-photo-print-queue
 ```
 **Expected Output:** Message received successfully.
 **Actual Output:** ✅ Passed. Message retrieved from queue.
@@ -102,7 +114,7 @@ aws sqs receive-message --queue-url YOUR_QUEUE_URL
 
 ---
 
-### ✅ **Test: Verify Lambda Processing of SQS Messages**
+### ✅ **Test: Verify Lambda Processing of SQS Messages** TODO
 **Command:**
 ```sh
 aws logs tail /aws/lambda/YOUR_LAMBDA_FUNCTION
@@ -119,48 +131,52 @@ aws logs tail /aws/lambda/YOUR_LAMBDA_FUNCTION
 ### ✅ **Test: Verify DynamoDB Stores Order Data**
 **Command:**
 ```sh
-aws dynamodb scan --table-name YOUR_TABLE_NAME
+aws dynamodb scan --table-name processedCustomerTable2025
 ```
 **Expected Output:** Order details present in the table.
 **Actual Output:** ✅ Passed. Order stored in DynamoDB.
 
 📌 **Proof:**
-- **AWS CLI Output:** [dynamodb_results.log]
+- **AWS CLI Output:** [DynamoDB log](./logs/dynamodb.log)
 - **AWS Console Screenshot:** (Attach if needed)
+
+![DynamoDB table scan](./screenshot/dynamodb-table.png)
 
 ---
 
-## **4. Integration Tests**
+## **4. Integration Tests** USE POSTMAN
 
 ### ✅ **Test: Full System Flow (Upload Image → Order Processing → Print Completion)**
 **Commands & Steps:**
 1. **Upload Image via API:**
-   ```sh
-   curl -X POST "http://YOUR_API_URL/submit-order" -F "photo=@test-image.jpg" -F "name=John Doe"
-   ```
+   
+    ![Postman](./screenshot/potman-jm.png)
+    ![Julia Marthe](./screenshot/s3-julia-marthe.png)
+
 2. **Verify Image in S3:**
    ```sh
-   aws s3 ls s3://YOUR_BUCKET_NAME/
+   aws s3 ls s3://snaps3flowbucket02025/uploads/
    ```
-3. **Verify SQS Message:**
+
+   ![S3 image list](./screenshot/s3-julia-m.png)
+
+3. **Verify SQS Message:** TODO
    ```sh
-   aws sqs receive-message --queue-url YOUR_QUEUE_URL
+   aws sqs receive-message --queue-url https://sqs.us-east-1.amazonaws.com/445567116635/snapflow-photo-print-queue
    ```
-4. **Check Lambda Logs:**
+4. **Check Lambda Logs:** TODO
    ```sh
-   aws logs tail /aws/lambda/YOUR_LAMBDA_FUNCTION
+   aws logs tail /aws/lambda/dummyPrinter 
    ```
 5. **Check DynamoDB Order Status:**
    ```sh
-   aws dynamodb scan --table-name YOUR_TABLE_NAME
+   aws dynamodb scan --table-name processedCustomerTable2025
    ```
 
-**Expected Output:** Full cycle works—image stored, SQS message queued, Lambda processed, order updated in DynamoDB.
-**Actual Output:** ✅ Passed. Everything worked correctly.
+   ![DynamoDB Julia M](./screenshot/dynamodb-jm.png)
 
-📌 **Proof:**
-- **AWS CLI Output Files:** [s3_results.log] [sqs_results.log] [lambda_logs.log] [dynamodb_results.log]
-- **AWS Console Screenshots:** (Attach as needed)
+- **Expected Output:** Full cycle works—image stored, SQS message queued, Lambda processed, order updated in DynamoDB.
+- **Actual Output:** ✅ Passed. Everything worked correctly.
 
 ---
 
@@ -169,8 +185,13 @@ aws dynamodb scan --table-name YOUR_TABLE_NAME
 ### ✅ **Test: Verify IAM Permissions for S3**
 **Command:**
 ```sh
-aws iam get-role-policy --role-name YOUR_ROLE_NAME --policy-name YOUR_POLICY_NAME
+ aws iam list-attached-role-policies --role-name lambda-exec-role
 ```
+
+📌 **Proof:**
+- **IAM Policy Screenshot**
+![Lambda role policies](./screenshot/lambda-role-policy.png)
+
 **Expected Output:** Only necessary permissions (`s3:PutObject`, `s3:GetObject`).
 **Actual Output:** ✅ Passed. IAM policy is correct.
 

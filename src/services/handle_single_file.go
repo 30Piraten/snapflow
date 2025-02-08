@@ -1,6 +1,7 @@
 package services
 
 import (
+	"fmt"
 	"io"
 	"mime/multipart"
 
@@ -36,7 +37,7 @@ func handleSingleFile(c *fiber.Ctx, file *multipart.FileHeader, opts models.Proc
 	// Process the file
 	result := ProcessFile(c, file, opts, order)
 	if result.Error != nil {
-		return utils.HandleError(c, fiber.StatusInternalServerError, "Failed to process file", &result.Error.Error)
+		return utils.HandleError(c, fiber.StatusInternalServerError, "Failed to process file", fmt.Errorf("%+v", result.Error))
 	}
 
 	return c.JSON(fiber.Map{

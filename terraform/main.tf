@@ -29,7 +29,7 @@ module "sqs" {
   sqs_lambda_policy_name = var.sqs_lambda_policy_name
   sqs_policy_description = var.sqs_policy_description
   message_retention_seconds = var.message_retention_seconds
-  visibility_timeout_seconds = var.visibility_timeout_seconds
+  # visibility_timeout_seconds = var.visibility_timeout_seconds 
   lambda_exec_role_name = module.lambda.lambda_exec_role_name
 }
 
@@ -58,6 +58,9 @@ module "ses" {
 module "lambda" {
   source = "./modules/lambda"
   region = var.region
+  ses_email = var.ses_email
+  lambda_polic_name = var.lambda_polic_name
+  lambda_policy_description = var.lambda_policy_description
   lambda_exec_role = var.lambda_exec_role
   sqs_queue_arn = module.sqs.sqs_queue_arn
   sqs_queue_url = module.sqs.sqs_queue_url
@@ -65,4 +68,5 @@ module "lambda" {
   dynamodb_arn = module.dynamodb.dynamodb_arn
   event_source_arn = module.sqs.sqs_event_source_arn
   dynamodb_table_name = module.dynamodb.dynamodb_table_name
+  s3_processed_image_bucket_id = module.s3.processed_image_bucket_id
 }

@@ -82,10 +82,10 @@ variable "message_retention_seconds" {
   default = 86400
 }
 
-variable "visibility_timeout_seconds" {
-  type    = number
-  default = 60
-}
+# variable "visibility_timeout_seconds" {
+#   type    = number
+#   default = 60
+# }
 
 variable "queue_name" {
   type    = string
@@ -143,4 +143,14 @@ variable "lambda_exec_role" {
 variable "sqs_lambda_policy_name" {
   type = string 
   default = "lambda-sqs-policy"
+}
+
+variable "lambda_polic_name" {
+  type = string 
+  default = "lambda-iam-policy"
+}
+
+variable "lambda_policy_description" {
+  type = string 
+  default = "Lambda permissions to interact with SQS, DynamoDB and SNS"
 }

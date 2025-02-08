@@ -15,6 +15,7 @@ import (
 // concurrently using the given processing options.
 func ProcessMultipleFiles(c *fiber.Ctx, files []*multipart.FileHeader, opts models.ProcessingOptions) ([]models.FileProcessingResult, []error) {
 
+	// Define required variables
 	var (
 		results   []models.FileProcessingResult
 		errors    []error
@@ -22,8 +23,8 @@ func ProcessMultipleFiles(c *fiber.Ctx, files []*multipart.FileHeader, opts mode
 		semaphore = make(chan struct{}, models.MaxConcurrentProcessing)
 	)
 
-	processor := NewImageProcessor(utils.Logger)
-	order := new(models.PhotoOrder)
+	resultsChan := make(chan models.FileProcessingResult, len(files))
+	errorsChan := make(chan error, len(files))
 
 	// Validate all files upfront
 	for _, file := range files {
@@ -34,27 +35,23 @@ func ProcessMultipleFiles(c *fiber.Ctx, files []*multipart.FileHeader, opts mode
 		}
 
 		fileData, err := io.ReadAll(source)
-		// Close the file after reading
-		source.Close()
+		source.Close() // Close the file after reading
 		if err != nil {
 			errors = append(errors, fmt.Errorf("failed to read the file %s: %v", file.Filename, err))
 			continue
 		}
-
+		processor := NewImageProcessor(utils.Logger)
 		if _, err := processor.ValidateAndProcessImage(fileData, opts); err != nil {
 			errors = append(errors, fmt.Errorf("file %s failed validation: %v", file.Filename, err))
 		}
 	}
 
-	// Short-circuit if there are validation errors
+	// Short-circuit if the validation fials
 	if len(errors) > 0 {
 		return nil, errors
 	}
 
 	// Concurrent processing of validated files
-	resultsChan := make(chan models.FileProcessingResult, len(files))
-	errorsChan := make(chan error, len(files))
-
 	for _, file := range files {
 		wg.Add(1)
 
@@ -63,26 +60,31 @@ func ProcessMultipleFiles(c *fiber.Ctx, files []*multipart.FileHeader, opts mode
 			semaphore <- struct{}{}
 			defer func() { <-semaphore }()
 
+			// Create a separate PhotoOrder for each files
+			order, err := ParseOrderDetails(c)
+			if err != nil {
+				errorsChan <- fmt.Errorf("failed to parse form fields for file %s: %v", file.Filename, err)
+				return
+			}
+
+			// Pass the order to ProcessFile
 			result := ProcessFile(c, file, opts, order)
 			if result.Error != nil {
-				errorsChan <- &result.Error.Error // Review
+				errorsChan <- fmt.Errorf("file: %s processing failed %v", file.Filename, result.Error)
 			} else {
 				resultsChan <- result
 			}
 		}(file)
 	}
 
-	// Collect results and errors
-	go func() {
-		wg.Wait()
-		close(resultsChan)
-		close(errorsChan)
-	}()
+	wg.Wait()
+	close(resultsChan)
+	close(errorsChan)
 
+	// Collect results and errors
 	for result := range resultsChan {
 		results = append(results, result)
 	}
-
 	for err := range errorsChan {
 		errors = append(errors, err)
 	}

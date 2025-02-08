@@ -98,10 +98,10 @@ type FileProcessingResult struct {
 
 // ProcessingError represents a structured processing error
 type ProcessingError struct {
-	Type    string                 `json:"type"`
-	Code    string                 `json:"code"`
-	Message string                 `json:"message"`
-	Error   ProcessedError         `json:"error"`
+	Type    string `json:"type"`
+	Code    string `json:"code"`
+	Message string `json:"message"`
+	// Error   ProcessedError         `json:"error"`
 	Details map[string]interface{} `json:"details,omitempty"`
 }
 
