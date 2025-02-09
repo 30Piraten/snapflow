@@ -25,12 +25,48 @@ terraform apply --auto-approve
 📌 **Proof:**
 - **Terraform Deployment Log:** [Terraform deployment log](./logs/tf-apply.log)
 
-- **Terraform Output Screenshot:**
-**Terraform Plan:**
-![Terraform plan output](./screenshot/tf-plan.png)
+- **Terraform CLI Output:**
 
+**Terraform Plan:**
+```sh
+➜ terraform plan
+module.lambda.data.aws_caller_identity.account: Reading...
+module.lambda.data.aws_caller_identity.account: Read complete after 1s [id=5***********]
+
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+  + create
+ <= read (data resources)
+
+...
+Plan: 16 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  + dynamodb_table_name = "processedCustomerTable2025"
+  + s3_bucket_name      = "snaps3flowbucket02025"
+  + sns_topic_arn       = (known after apply)
+  + sqs_queue_url       = (known after apply)
+  + sqs_queue_url_id    = (known after apply)
+```
 **Terraform Apply:**
-![Terraform apply output](./screenshot/tf-apply.png)
+```sh
+➜ terraform apply -auto-approve
+...
+module.lambda.aws_iam_policy.lambda_policy: Creation complete after 3s [id=arn:aws:iam::5**********:policy/lambda-iam-policy]
+module.lambda.aws_iam_role_policy_attachment.lambda_policy_attachment: Creating...
+module.lambda.aws_iam_role_policy_attachment.lambda_policy_attachment: Creation complete after 0s [id=lambda-exec-role-20250209052410066500000001]
+module.lambda.aws_lambda_event_source_mapping.sqs_to_lambda: Still creating... [10s elapsed]
+module.lambda.aws_lambda_event_source_mapping.sqs_to_lambda: Still creating... [20s elapsed]
+module.lambda.aws_lambda_event_source_mapping.sqs_to_lambda: Creation complete after 25s [id=dc4532ac-da8a-4e94-8759-dae19a6cea9b]
+
+Apply complete! Resources: 16 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+dynamodb_table_name = "processedCustomerTable2025"
+s3_bucket_name = "snaps3flowbucket02025"
+sns_topic_arn = "arn:aws:sns:us-east-1:5**********:snapflowSNSTopic"
+sqs_queue_url = "https://sqs.us-east-1.amazonaws.com/5**********/snapflow-photo-print-queue"
+```
 
 ---
 
