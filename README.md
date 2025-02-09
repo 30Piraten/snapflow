@@ -57,7 +57,7 @@ Editors in the Sprint Print Department focus solely on editing and sending photo
 
 #### 1. **User Upload Process**  
 - **Photo Upload and Validation**  
-  The frontend is a simple HTML form where users submit their details and upload photos for printing. When a user visits the site (`127.0.0.1:1234`), fills out the form, and submits their photos, the Go/Fiber backend processes the request.  
+  The frontend is a simple HTML form where users submit their details and upload photos for printing. When a user visits the site (`http://127.0.0.1:1234`), fills out the form, and submits their photos, the Go/Fiber backend processes the request.  
   - The backend validates the user’s details and checks whether the uploaded photos meet the required specifications:
     - Ensures the uploaded files are **JPEG or PNG**.
     - Validates the **MIME type** to prevent invalid formats.

@@ -212,7 +212,7 @@ upload: screenshot/test-image.png to s3://snaps3flowbucket02025/uploads/test-ima
 ---
 
 ### ✅ **Test: Verify DynamoDB Stores Order Data**
-**Send POST request with Postman**
+**Send POST request with Postman:**
 ```sh
 ➜ {
     "message": "Order received successfully",
@@ -310,17 +310,12 @@ upload: screenshot/test-image.png to s3://snaps3flowbucket02025/uploads/test-ima
 **Command:**
 ```sh
  aws iam list-attached-role-policies --role-name lambda-exec-role
+
 ```
 
-📌 **Proof:**
-- **IAM Policy Screenshot**
-![Lambda role policies](./screenshot/lambda-role-policy.png)
-
-**Expected Output:** Only necessary permissions (`s3:PutObject`, `s3:GetObject`).
-**Actual Output:** ✅ Passed. IAM policy is correct.
-
-📌 **Proof:**
-- **IAM Policy Screenshot** (Attach if needed)
+- **Expected Output:** Only necessary permissions (for SNS, S3, DynamoDB and SES).
+- **Actual Output:**IAM policy is correct.
+- **Test Status:** ✅ Passed.
 
 ---
 
@@ -329,12 +324,11 @@ upload: screenshot/test-image.png to s3://snaps3flowbucket02025/uploads/test-ima
 ```sh
 aws iam simulate-principal-policy --policy-source-arn arn:aws:iam::ACCOUNT_ID:role/YOUR_ROLE_NAME \
     --action-names s3:PutObject s3:GetObject sqs:SendMessage dynamodb:PutItem
-```
-**Expected Output:** Only required permissions allowed.
-**Actual Output:** ✅ Passed. No excessive permissions.
 
-📌 **Proof:**
-- **IAM Policy Screenshot** (Attach if needed)
+```
+- **Expected Output:** Only required permissions allowed.
+- **Actual Output:** No excessive permissions.
+- **Test Status:** ✅ Passed.
 
 ---
 
@@ -347,13 +341,6 @@ aws iam simulate-principal-policy --policy-source-arn arn:aws:iam::ACCOUNT_ID:ro
 | Lambda Execution | Logs show processing | Logs confirmed processing | ✅ Passed |
 | DynamoDB Order | Order data stored | Data present | ✅ Passed |
 | IAM Policies | Least privilege verified | No excessive permissions | ✅ Passed |
-
----
-
-## **7. Additional Notes**
-- Screenshots and logs are stored in their respective files for validation.
-- AWS CLI outputs are captured in `.log` files for reference.
-- If needed, a short video demo can be created to show the full workflow.
 
 ---
 
