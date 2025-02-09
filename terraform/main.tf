@@ -29,7 +29,7 @@ module "sqs" {
   sqs_lambda_policy_name = var.sqs_lambda_policy_name
   sqs_policy_description = var.sqs_policy_description
   message_retention_seconds = var.message_retention_seconds
-  # visibility_timeout_seconds = var.visibility_timeout_seconds 
+  visibility_timeout_seconds = var.visibility_timeout_seconds 
   lambda_exec_role_name = module.lambda.lambda_exec_role_name
 }
 

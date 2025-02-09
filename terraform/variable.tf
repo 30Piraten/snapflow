@@ -82,10 +82,10 @@ variable "message_retention_seconds" {
   default = 86400
 }
 
-# variable "visibility_timeout_seconds" {
-#   type    = number
-#   default = 60
-# }
+variable "visibility_timeout_seconds" {
+  type    = number
+  default = 60
+}
 
 variable "queue_name" {
   type    = string

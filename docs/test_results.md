@@ -6,26 +6,21 @@ This document captures the results of all cloud infrastructure tests executed fo
 - **Expected Output**
 - **Actual Output**
 - **Pass/Fail Status**
-- **Screenshots (if applicable)**
+- **Screenshots or CLI output (if applicable)**
 
 ---
 
 ## **2. Infrastructure Validation (Terraform Tests)**
 
 ### ✅ **Test: Terraform Deployment Validation**
-**Command:**
+
+**Terraform CLI Output:**
+
+**Terraform Validate:**
 ```sh
-terraform validate
-terraform plan
-terraform apply --auto-approve
+➜ terraform validate
+Success! The configuration is valid.
 ```
-- **Expected Output:** No errors, resources deployed successfully.
-- **Actual Output:** ✅ Passed. No validation errors.
-
-📌 **Proof:**
-- **Terraform Deployment Log:** [Terraform deployment log](./logs/tf-apply.log)
-
-- **Terraform CLI Output:**
 
 **Terraform Plan:**
 ```sh
@@ -67,101 +62,146 @@ s3_bucket_name = "snaps3flowbucket02025"
 sns_topic_arn = "arn:aws:sns:us-east-1:5**********:snapflowSNSTopic"
 sqs_queue_url = "https://sqs.us-east-1.amazonaws.com/5**********/snapflow-photo-print-queue"
 ```
-
+ 
+- **Expected Output:** No errors, resources deployed successfully.
+- **Actual Output:** No validation errors. All AWS resources are created successfully.
+- **Test Status:** ✅ Passed.
 ---
 
-#### **✅ Test: Detect Configuration Drift**  
+### **✅ Test: Detect Configuration Drift**  
 Ensure AWS infrastructure matches the last applied Terraform state.  
 ```sh
-terraform plan -detailed-exitcode
+➜ terraform plan -detailed-exitcode
+module.lambda.data.aws_caller_identity.account: Reading...
+module.ses.aws_ses_email_identity.ses_email: Refreshing state... [id=s**********@*********.com]
+module.lambda.aws_iam_role.lambda_exec_role: Refreshing state... [id=lambda-exec-role]
+module.sqs.aws_sqs_queue.print_queue: Refreshing state... [id=https://sqs.us-east-1.amazonaws.com/5***********/snapflow-photo-print-queue]
+module.sns.aws_sns_topic.snapflow_sns_topic: Refreshing state... [id=arn:aws:sns:us-east-1:5***********:snapflowSNSTopic]
+...
+No changes. Your infrastructure matches the configuration.
+
+Terraform has compared your real infrastructure against your configuration and found no differences, so no changes are needed.
 ```
-✅ **Pass if:** Exit code is `0` (no drift detected).
-
-📌 **Proof:**
-- **Terraform Output Screenshot:**
-![Terraform drift](./screenshot/tf-drift.png)
-
+- **Expected Output:** No errors, resources deployed successfully.
+- **Actual Output:** No difference in configuration.
+- **Test Status:** ✅ Passed. 
 ---
-–
+
 ### ✅ **Test: Terraform Output Validation**
 **Command:**
 ```sh
-terraform output
+➜ terraform output
+dynamodb_table_name = "processedCustomerTable2025"
+s3_bucket_name = "snaps3flowbucket02025"
+sns_topic_arn = "arn:aws:sns:us-east-1:5***********:snapflowSNSTopic"
+sqs_queue_url = "https://sqs.us-east-1.amazonaws.com/5***********/snapflow-photo-print-queue"
+sqs_queue_url_id = "https://sqs.us-east-1.amazonaws.com/5***********/snapflow-photo-print-queue"
 ```
-**Expected Output:** Outputs with correct AWS resource names.
-**Actual Output:** ✅ Passed. Resources match expectations.
-
-📌 **Proof:**
-- **Terraform Output Screenshot:** 
-![Terraform output](./screenshot/tf-output.png)
-
+- **Expected Output:** Outputs with correct AWS resource names.
+- **Actual Output:** Resources match expectations.
+- **Test Status:** ✅ Passed.
 ---
 
 ## **3. AWS Service-Specific Tests**
 
 ### ✅ **Test: Verify S3 Bucket Exists & Public Access is Blocked**
-**Command:**
+
+**Get Bucket ACL:**
 ```sh
-aws s3api get-bucket-acl --bucket snaps3flowbucket02025
-aws s3api get-public-access-block --bucket snaps3flowbucket02025
+➜ aws s3api get-bucket-acl --bucket snaps3flowbucket02025
+{
+    "Owner": {
+        "DisplayName": "raevavictorehikioya",
+        "ID": "01******************************************************a022"
+    },
+    "Grants": [
+        {
+            "Grantee": {
+                "DisplayName": "raevavictorehikioya",
+                "ID": "01*****************************************************a02",
+                "Type": "CanonicalUser"
+            },
+            "Permission": "FULL_CONTROL"
+        }
+    ]
+}
+(END)
 ```
-**Expected Output:** PublicAccessBlockConfiguration enabled.
-**Actual Output:** ✅ Passed. Public access blocked.
 
-📌 **Proof:**
-- **AWS Console Screenshot:**
-
-**S3 Bucket ACL:**
-![Terraform bucket acl](./screenshot/bucket-acl.png)
-**S3 Public Access Block:**
-![Terraform public access block](./screenshot/public-access.png)
-
+**Confirm Public Access Is Blocked:**
+```sh
+➜ aws s3api get-public-access-block --bucket snaps3flowbucket02025
+{
+    "PublicAccessBlockConfiguration": {
+        "BlockPublicAcls": true,
+        "IgnorePublicAcls": true,
+        "BlockPublicPolicy": true,
+        "RestrictPublicBuckets": true
+    }
+}
+(END)
+```
+- **Expected Output:** PublicAccessBlockConfiguration enabled.
+- **Actual Output:** Public access blocked.
+- **Test Status:** ✅ Passed.
 ---
 
 ### ✅ **Test: Verify File Upload to S3**
 **Command:**
 ```sh
-aws s3 cp test-image.jpg s3://YOUR_BUCKET_NAME/
-aws s3 ls s3://YOUR_BUCKET_NAME/
+➜ aws s3 cp screenshot/test-image.png s3://snaps3flowbucket02025/uploads/
+upload: screenshot/test-image.png to s3://snaps3flowbucket02025/uploads/test-image.png
 ```
-**Expected Output:** File successfully uploaded and listed.
-**Actual Output:** ✅ Passed. File appears in S3.
+![S3 Snapflow AWS Console IMG](./screenshot/s3-bucket-console.png)
 
-📌 **Proof:**
-- **AWS CLI Output:** [s3_results.log]
-![Upload](./screenshot/upload.png)
-
-- **AWS Console Screenshot:** (Attach image if needed) -TODO
+```sh
+➜ aws s3 ls s3://snaps3flowbucket02025/uploads/
+2025-02-09 07:11:39     621723 test-image.png
+```
+- **Expected Output:** File successfully uploaded and listed.
+- **Actual Output:** File appears in S3.
+- **Test Passed:** ✅ Passed.
 
 ---
 
 ### ✅ **Test: Verify SQS Receives Messages** TODO
-**Command:**
+**Send Message:**
 ```sh
-aws sqs send-message --queue-url https://sqs.us-east-1.amazonaws.com/445567116635/snapflow-photo-print-queue --message-body "Test Message"
-
-aws sqs receive-message --queue-url https://sqs.us-east-1.amazonaws.com/445567116635/snapflow-photo-print-queue
+➜ aws sqs send-message --queue-url https://sqs.us-east-1.amazonaws.com/445567116635/snapflow-photo-print-queue --message-body '{"photo_Id": "123", "photo": "test.png", "paper_size": "2X3", "paper_type": "matte", "customer_email": "rynaraeva@gmail.com"}'
+{
+    "MD5OfMessageBody": "485c220ed4bc8894769a8eac488fe990",
+    "MessageId": "8ca00713-7049-4e6d-bde8-65474b0347ba"
+}
+(END)
 ```
-**Expected Output:** Message received successfully.
-**Actual Output:** ✅ Passed. Message retrieved from queue.
 
-📌 **Proof:**
-- **AWS CLI Output:** [sqs_results.log]
+**Receive Message:**
+```sh
+aws sqs receive-message --queue-url https://sqs.us-east-1.amazonaws.com/445567116635/snapflow-photo-print-queue
+
+```
+- **Expected Output:** Message received successfully.
+- **Actual Output:** Message retrieved from queue.
+- **Test Status:** ✅ Passed. 
 
 ---
 
 ### ✅ **Test: Verify Lambda Processing of SQS Messages** TODO
 **Command:**
 ```sh
-aws logs tail /aws/lambda/YOUR_LAMBDA_FUNCTION
+➜ aws logs tail /aws/lambda/dummyPrinter --follow
+2025-02-09T07:15:23.834000+00:00 2025/02/09/[$LATEST]cbf109ac0449402fa345f924b801155c START RequestId: b49d2f8e-e9a4-5a71-b01b-4facb19a9996 Version: $LATEST
+2025-02-09T07:15:23.835000+00:00 2025/02/09/[$LATEST]cbf109ac0449402fa345f924b801155c 🖨️ Printing photo: 123 for rynaraeva@gmail.com
+2025-02-09T07:15:33.842000+00:00 2025/02/09/[$LATEST]cbf109ac0449402fa345f924b801155c ✅ Print completed!
+2025-02-09T07:15:43.916000+00:00 2025/02/09/[$LATEST]cbf109ac0449402fa345f924b801155c 2025/02/09 07:15:43 ✅ print job completed for 123
+2025-02-09T07:15:43.917000+00:00 2025/02/09/[$LATEST]cbf109ac0449402fa345f924b801155c END RequestId: b49d2f8e-e9a4-5a71-b01b-4facb19a9996
+2025-02-09T07:15:43.917000+00:00 2025/02/09/[$LATEST]cbf109ac0449402fa345f924b801155c REPORT RequestId: b49d2f8e-e9a4-5a71-b01b-4facb19a9996	Duration: 20083.12 ms	Billed Duration: 20084 ms	Memory Size: 128 MB	Max Memory Used: 28 MB
 ```
-**Expected Output:** Log entry showing "Message received from SQS" and processing success.
-**Actual Output:** ✅ Passed. Lambda processed the message.
+![DyanoDB update-SQS](./screenshot/sqs-dy-update.png)
 
-📌 **Proof:**
-- **Lambda Logs:** [lambda_logs.log]
-- **AWS Console Screenshot:** (Attach if needed)
-
+- **Expected Output:** Log entry showing "Message received from SQS" and processing success.
+- **Actual Output:** Lambda processed the message.
+- **Test Status:** ✅ Passed.
 ---
 
 ### ✅ **Test: Verify DynamoDB Stores Order Data**

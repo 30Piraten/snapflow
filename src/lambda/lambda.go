@@ -126,10 +126,13 @@ func Handler(ctx context.Context, event SQSEvent) error {
 		InitAWS()
 	}
 
+	// Loop through all SQS messages
 	for _, record := range event.Records {
+		log.Printf("📩 Received message: %s", record.Body) // Log each message
+
 		err := json.Unmarshal([]byte(record.Body), &printJob)
 		if err != nil {
-			log.Printf("❌ failed to unmarshal SQS message: %v", err)
+			log.Printf("❌ Failed to unmarshal SQS message: %v", err)
 			continue
 		}
 

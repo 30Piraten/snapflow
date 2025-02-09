@@ -80,7 +80,7 @@ type ImageProcessor struct {
 type ResponseData struct {
 	Message      string      `json:"message"`
 	Order        *PhotoOrder `json:"order"`
-	PresignedURL string      `json:"presigned_url"`
+	PresignedURL []string    `json:"presigned_url"`
 	OrderID      string      `json:"order_id"`
 }
 

@@ -14,10 +14,14 @@ import (
 	"github.com/google/uuid"
 )
 
-// PhotoOrder represents the structure of o÷ur form data
+// type PresignedURLResponse struct {
+// 	URL     string            `json:"url"`
+// 	OrderID string            `json:"order_id"`
+// 	Fields  map[string]string `json:"fields,omitempty"`
+// }
 
 type PresignedURLResponse struct {
-	URL     string            `json:"url"`
+	URLs    []string          `json:"urls"`
 	OrderID string            `json:"order_id"`
 	Fields  map[string]string `json:"fields,omitempty"`
 }
@@ -30,10 +34,12 @@ func GeneratePresignedURL(order *models.PhotoOrder) (*PresignedURLResponse, erro
 	// Initialize DyanmoDB client
 	cfg.InitDynamoDB()
 
+	// Confirm if fullname and email are available
 	if order.FullName == "" || order.Email == "" {
 		return nil, fmt.Errorf("missing required fields for presigned URL generation")
 	}
 
+	// Define variables
 	orderID := uuid.New().String()
 	uploadTimestamp := time.Now().Unix()
 	folderKey := fmt.Sprintf("%s/%s", order.FullName, orderID) // -> Review
@@ -95,8 +101,11 @@ func GeneratePresignedURL(order *models.PhotoOrder) (*PresignedURLResponse, erro
 
 	log.Printf("Values from presignedURL: %s : %s", order.FullName, order.Location)
 
+	// Join the URLs into a single string
+	// urlString := strings.Join(presignedURLs, ",")
 	return &PresignedURLResponse{
-		URL:     folderKey,
+		// URL:     folderKey,
+		URLs:    presignedURLs,
 		OrderID: orderID,
 	}, nil
 }
