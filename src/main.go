@@ -3,14 +3,12 @@ package main
 import (
 	"log"
 	"os"
-	"time"
 
 	"github.com/30Piraten/snapflow/config"
 	"github.com/30Piraten/snapflow/routes"
 	"github.com/30Piraten/snapflow/utils"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/template/html/v2"
 )
 
@@ -50,10 +48,10 @@ func main() {
 		AllowMethods: os.Getenv("ALLOWED_METHODS"),
 	}))
 
-	app.Use(limiter.New(limiter.Config{
-		Max:        5,
-		Expiration: 1 * time.Minute,
-	}))
+	// app.Use(limiter.New(limiter.Config{
+	// 	Max:        5,
+	// 	Expiration: 1 * time.Minute,
+	// }))
 
 	app.Use(func(c *fiber.Ctx) error {
 		log.Printf("Handling request for %s", c.Path())
@@ -64,7 +62,7 @@ func main() {
 	routes.Handler(app)
 
 	// Setup static file serving if needed
-	app.Static("/public", "./public")
+	app.Static("/public", "../web/public")
 
 	log.Fatal(app.Listen(":" + PORT))
 }

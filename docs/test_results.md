@@ -270,33 +270,8 @@ upload: screenshot/test-image.png to s3://snaps3flowbucket02025/uploads/test-ima
 ## **4. Integration Tests** USE POSTMAN - Video here instead
 
 ### ✅ **Test: Full System Flow (Upload Image → Order Processing → Print Completion)**
-**Commands & Steps:**
-1. **Upload Image via API:**
-   
-    ![Postman](./screenshot/potman-jm.png)
-    ![Julia Marthe](./screenshot/s3-julia-marthe.png)
 
-2. **Verify Image in S3:**
-   ```sh
-   aws s3 ls s3://snaps3flowbucket02025/uploads/
-   ```
-
-   ![S3 image list](./screenshot/s3-julia-m.png)
-
-3. **Verify SQS Message:** TODO
-   ```sh
-   aws sqs receive-message --queue-url https://sqs.us-east-1.amazonaws.com/445567116635/snapflow-photo-print-queue
-   ```
-4. **Check Lambda Logs:** TODO
-   ```sh
-   aws logs tail /aws/lambda/dummyPrinter 
-   ```
-5. **Check DynamoDB Order Status:**
-   ```sh
-   aws dynamodb scan --table-name processedCustomerTable2025
-   ```
-
-   ![DynamoDB Julia M](./screenshot/dynamodb-jm.png)
+Watch full video demo here: [Snapflow Demo](https://youtu.be/hdQmYGdg_WQ)
 
 - **Expected Output:** Full cycle works—image stored, SQS message queued, Lambda processed, order updated in DynamoDB.
 - **Actual Output:** Everything worked correctly.
@@ -309,8 +284,16 @@ upload: screenshot/test-image.png to s3://snaps3flowbucket02025/uploads/test-ima
 ### ✅ **Test: Verify IAM Permissions for S3**
 **Command:**
 ```sh
- aws iam list-attached-role-policies --role-name lambda-exec-role
-
+➜ aws iam list-attached-role-policies --role-name lambda-exec-role
+{
+    "AttachedPolicies": [
+        {
+            "PolicyName": "lambda-iam-policy",
+            "PolicyArn": "arn:aws:iam::445567116635:policy/lambda-iam-policy"
+        }
+    ]
+}
+(END)
 ```
 
 - **Expected Output:** Only necessary permissions (for SNS, S3, DynamoDB and SES).
@@ -322,8 +305,45 @@ upload: screenshot/test-image.png to s3://snaps3flowbucket02025/uploads/test-ima
 ### ✅ **Test: Verify Least Privilege for Lambda**
 **Command:**
 ```sh
-aws iam simulate-principal-policy --policy-source-arn arn:aws:iam::ACCOUNT_ID:role/YOUR_ROLE_NAME \
+➜ aws iam simulate-principal-policy --policy-source-arn arn:aws:iam::445567116635:role/lambda-exec-role \
     --action-names s3:PutObject s3:GetObject sqs:SendMessage dynamodb:PutItem
+
+# AWS blocks all actions by default unless explicitly allowed in the Lambda 
+# IAM policy. The Lambda IAM role for Snapflow grants specific permissions  
+# to S3, SQS, SNS, and DynamoDB, allowing only necessary actions.
+{
+    "EvaluationResults": [
+        {
+            "EvalActionName": "s3:PutObject",
+            "EvalResourceName": "*",
+            "EvalDecision": "implicitDeny",
+            "MatchedStatements": [],
+            "MissingContextValues": []
+        },
+        {
+            "EvalActionName": "s3:GetObject",
+            "EvalResourceName": "*",
+            "EvalDecision": "implicitDeny",
+            "MatchedStatements": [],
+            "MissingContextValues": []
+        },
+        {
+            "EvalActionName": "sqs:SendMessage",
+            "EvalResourceName": "*",
+            "EvalDecision": "implicitDeny",
+            "MatchedStatements": [],
+            "MissingContextValues": []
+        },
+        {
+            "EvalActionName": "dynamodb:PutItem",
+            "EvalResourceName": "*",
+            "EvalDecision": "implicitDeny",
+            "MatchedStatements": [],
+            "MissingContextValues": []
+        }
+    ]
+}
+(END)
 
 ```
 - **Expected Output:** Only required permissions allowed.

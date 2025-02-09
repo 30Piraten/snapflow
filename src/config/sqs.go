@@ -59,7 +59,7 @@ func SendPrintRequest(customerEmail, photoID, processedS3Location string) error 
 		output, err := client.SendMessage(ctx, &sqs.SendMessageInput{
 			QueueUrl:     aws.String(queueURL),
 			MessageBody:  aws.String(string(jobBytes)),
-			DelaySeconds: 10,
+			DelaySeconds: 30,
 		})
 
 		if err == nil {

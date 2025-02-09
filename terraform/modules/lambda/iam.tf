@@ -61,11 +61,15 @@ data "aws_iam_policy_document" "lambda_policy_document" {
     actions = [ 
       "s3:PutObject",
       "s3:GetObject",
-      "s3:ListObject",
       "s3:ListBucket"
      ]
     #  resources = ["arn:aws:s3:::${aws_s3_bucket.processed_image_bucket.id}/*"]
      resources = ["arn:aws:s3:::${var.s3_processed_image_bucket_id}/*"]
+  }
+
+  statement {
+    actions = [ "s3:ListObject" ]
+    resources = ["arn:aws:s3:::${var.s3_processed_image_bucket_id}"]
   }
 
 //CLOUDWATCH PERMISSIONS

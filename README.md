@@ -199,7 +199,7 @@ For detailed test cases including AWS debugging, and execution steps see: **[doc
 And for tests results checkout: **[tests](./docs/test_results.md)**
 
 ## 5.1. 📌 Workflow Video
-Snapflow's video walkthrough: [Snapflow Youtube](https://youtube.com/raeva/snapflow)
+Snapflow's video walkthrough: [Snapflow Demo](https://youtu.be/hdQmYGdg_WQ)
 
 ## 6. Future Enhancements
 - Add customer dashboard for tracking.
