@@ -164,38 +164,45 @@ upload: screenshot/test-image.png to s3://snaps3flowbucket02025/uploads/test-ima
 
 ---
 
-### ✅ **Test: Verify SQS Receives Messages** TODO
+### ✅ **Test: Verify SQS Receives Messages**
 **Send Message:**
 ```sh
 ➜ aws sqs send-message --queue-url https://sqs.us-east-1.amazonaws.com/445567116635/snapflow-photo-print-queue --message-body '{"photo_Id": "123", "photo": "test.png", "paper_size": "2X3", "paper_type": "matte", "customer_email": "rynaraeva@gmail.com"}'
+...
 {
     "MD5OfMessageBody": "485c220ed4bc8894769a8eac488fe990",
-    "MessageId": "8ca00713-7049-4e6d-bde8-65474b0347ba"
+    "MessageId": "f3d4aae1-191d-4f16-9a44-d4eaa2814138"
 }
 (END)
 ```
 
 **Receive Message:**
 ```sh
-aws sqs receive-message --queue-url https://sqs.us-east-1.amazonaws.com/445567116635/snapflow-photo-print-queue
+# Since the Lambda function burns messages too fast (SQS deletes messages after processing them): 
+# I have logged a print to the console to, at least confirm a message received. 
+# To rectify this in the near future, you can add a DLQ to SQS or temporary disable the Lambda trigger
+# from the AWS console if you would like to test manually.
 
+➜ aws sqs receive-message --queue-url https://sqs.us-east-1.amazonaws.com/445567116635/snapflow-photo-print-queue --max-number-of-messages 1
+...
+2025-02-09T07:45:25.393000+00:00 2025/02/09/[$LATEST]e4c6a7f83d0b4913b0f96dab4335f67d 2025/02/09 07:45:25 📩 Received message: {"photo_Id": "123", "photo": "test.png", "paper_size": "2X3", "paper_type": "matte", "customer_email": "rynaraeva@gmail.com"}
 ```
 - **Expected Output:** Message received successfully.
 - **Actual Output:** Message retrieved from queue.
 - **Test Status:** ✅ Passed. 
-
 ---
 
-### ✅ **Test: Verify Lambda Processing of SQS Messages** TODO
-**Command:**
+### ✅ **Test: Verify Lambda Processing of SQS Messages**
 ```sh
 ➜ aws logs tail /aws/lambda/dummyPrinter --follow
-2025-02-09T07:15:23.834000+00:00 2025/02/09/[$LATEST]cbf109ac0449402fa345f924b801155c START RequestId: b49d2f8e-e9a4-5a71-b01b-4facb19a9996 Version: $LATEST
-2025-02-09T07:15:23.835000+00:00 2025/02/09/[$LATEST]cbf109ac0449402fa345f924b801155c 🖨️ Printing photo: 123 for rynaraeva@gmail.com
-2025-02-09T07:15:33.842000+00:00 2025/02/09/[$LATEST]cbf109ac0449402fa345f924b801155c ✅ Print completed!
-2025-02-09T07:15:43.916000+00:00 2025/02/09/[$LATEST]cbf109ac0449402fa345f924b801155c 2025/02/09 07:15:43 ✅ print job completed for 123
-2025-02-09T07:15:43.917000+00:00 2025/02/09/[$LATEST]cbf109ac0449402fa345f924b801155c END RequestId: b49d2f8e-e9a4-5a71-b01b-4facb19a9996
-2025-02-09T07:15:43.917000+00:00 2025/02/09/[$LATEST]cbf109ac0449402fa345f924b801155c REPORT RequestId: b49d2f8e-e9a4-5a71-b01b-4facb19a9996	Duration: 20083.12 ms	Billed Duration: 20084 ms	Memory Size: 128 MB	Max Memory Used: 28 MB
+2025-02-09T07:45:25.301000+00:00 2025/02/09/[$LATEST]e4c6a7f83d0b4913b0f96dab4335f67d INIT_START Runtime Version: provided:al2.v75	Runtime Version ARN: arn:aws:lambda:us-east-1::runtime:a0bd056330123245a9e6d9b44a8e84e33ef6569f70e6939e2c7bd4c19630a93b
+2025-02-09T07:45:25.393000+00:00 2025/02/09/[$LATEST]e4c6a7f83d0b4913b0f96dab4335f67d START RequestId: 109336d0-83f9-5233-b1a9-56f2dcb89904 Version: $LATEST
+2025-02-09T07:45:25.393000+00:00 2025/02/09/[$LATEST]e4c6a7f83d0b4913b0f96dab4335f67d 2025/02/09 07:45:25 📩 Received message: {"photo_Id": "123", "photo": "test.png", "paper_size": "2X3", "paper_type": "matte", "customer_email": "rynaraeva@gmail.com"}
+2025-02-09T07:45:25.393000+00:00 2025/02/09/[$LATEST]e4c6a7f83d0b4913b0f96dab4335f67d 🖨️ Printing photo: 123 for rynaraeva@gmail.com
+2025-02-09T07:45:35.403000+00:00 2025/02/09/[$LATEST]e4c6a7f83d0b4913b0f96dab4335f67d ✅ Print completed!
+2025-02-09T07:45:46.000000+00:00 2025/02/09/[$LATEST]e4c6a7f83d0b4913b0f96dab4335f67d 2025/02/09 07:45:45 ✅ print job completed for 123
+2025-02-09T07:45:46.002000+00:00 2025/02/09/[$LATEST]e4c6a7f83d0b4913b0f96dab4335f67d END RequestId: 109336d0-83f9-5233-b1a9-56f2dcb89904
+2025-02-09T07:45:46.002000+00:00 2025/02/09/[$LATEST]e4c6a7f83d0b4913b0f96dab4335f67d REPORT RequestId: 109336d0-83f9-5233-b1a9-56f2dcb89904	Duration: 20609.13 ms	Billed Duration: 20700 ms	Memory Size: 128 MB	Max Memory Used: 29 MB	Init Duration: 90.70 ms
 ```
 ![DyanoDB update-SQS](./screenshot/sqs-dy-update.png)
 
@@ -205,22 +212,62 @@ aws sqs receive-message --queue-url https://sqs.us-east-1.amazonaws.com/44556711
 ---
 
 ### ✅ **Test: Verify DynamoDB Stores Order Data**
-**Command:**
+**Send POST request with Postman**
 ```sh
-aws dynamodb scan --table-name processedCustomerTable2025
+➜ {
+    "message": "Order received successfully",
+    "order": {
+        "fullName": "Julia Pope",
+        "location": "Stuttgart",
+        "size": "2X3",
+        "paperType": "Matte",
+        "email": "popejulia@gmail.com",
+        "photos": null
+    },
+    "presigned_url": ****************,
+    "order_id": "56964dbb-e926-4e3a-a1c0-8d88b0353113"
+}
 ```
-**Expected Output:** Order details present in the table.
-**Actual Output:** ✅ Passed. Order stored in DynamoDB.
 
-📌 **Proof:**
-- **AWS CLI Output:** [DynamoDB log](./logs/dynamodb.log)
-- **AWS Console Screenshot:** (Attach if needed)
+**DynamoDB AWS console output:**
 
-![DynamoDB table scan](./screenshot/dynamodb-table.png)
+![DynamoDB table scan](./screenshot/julia-pope.png)
+
+**DynamoDB CLI Output:**
+```sh
+➜ aws dynamodb scan --table-name processedCustomerTable2025
+     {
+            "paper_size": {
+                "S": "2X3"
+            },
+            "paper_type": {
+                "S": "Matte"
+            },
+            "photo_id": {
+                "S": "56964dbb-e926-4e3a-a1c0-8d88b0353113"
+            },
+            "upload_timestamp": {
+                "N": "1739087983"
+            },
+            "customer_email": {
+                "S": "popejulia@gmail.com"
+            },
+            "customer_fullname": {
+                "S": "Julia Pope"
+            },
+            "photo_status": {
+                "S": "printed"
+            }
+        }
+    ],
+```
+- **Expected Output:** Order details present in the table.
+- **Actual Output:** Order stored in DynamoDB.
+- **Test Status:** ✅ Passed.
 
 ---
 
-## **4. Integration Tests** USE POSTMAN
+## **4. Integration Tests** USE POSTMAN - Video here instead
 
 ### ✅ **Test: Full System Flow (Upload Image → Order Processing → Print Completion)**
 **Commands & Steps:**
@@ -252,7 +299,8 @@ aws dynamodb scan --table-name processedCustomerTable2025
    ![DynamoDB Julia M](./screenshot/dynamodb-jm.png)
 
 - **Expected Output:** Full cycle works—image stored, SQS message queued, Lambda processed, order updated in DynamoDB.
-- **Actual Output:** ✅ Passed. Everything worked correctly.
+- **Actual Output:** Everything worked correctly.
+- **Test Status:** ✅ Passed.
 
 ---
 
