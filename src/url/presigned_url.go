@@ -9,16 +9,11 @@ import (
 
 	cfg "github.com/30Piraten/snapflow/config"
 	"github.com/30Piraten/snapflow/models"
+	"github.com/30Piraten/snapflow/utils"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/google/uuid"
 )
-
-// type PresignedURLResponse struct {
-// 	URL     string            `json:"url"`
-// 	OrderID string            `json:"order_id"`
-// 	Fields  map[string]string `json:"fields,omitempty"`
-// }
 
 type PresignedURLResponse struct {
 	URLs    []string          `json:"urls"`
@@ -31,18 +26,25 @@ type PresignedURLResponse struct {
 // The generated presigned URL will contain the defined metadata
 func GeneratePresignedURL(order *models.PhotoOrder) (*PresignedURLResponse, error) {
 
-	// Initialize DyanmoDB client
-	cfg.InitDynamoDB()
-
 	// Confirm if fullname and email are available
 	if order.FullName == "" || order.Email == "" {
 		return nil, fmt.Errorf("missing required fields for presigned URL generation")
 	}
 
-	// Define variables
+	if len(order.Photos) == 0 {
+		return nil, fmt.Errorf("no photos provided in the order")
+	}
+
+	// Generate orderID
 	orderID := uuid.New().String()
 	uploadTimestamp := time.Now().Unix()
-	folderKey := fmt.Sprintf("%s/%s", order.FullName, orderID) // -> Review
+
+	// Sanitize fullname for S3 path
+	sanitizedName := utils.Sanitize(order.FullName)
+	folderKey := fmt.Sprintf("%s/%s", sanitizedName, orderID)
+
+	// Initialize DyanmoDB client
+	cfg.InitDynamoDB()
 
 	// Insert metadata into DynamoDB
 	err := cfg.InsertMetadata(order.FullName, order.Email, order.PaperType, order.Size, orderID, uploadTimestamp)
@@ -63,7 +65,14 @@ func GeneratePresignedURL(order *models.PhotoOrder) (*PresignedURLResponse, erro
 
 	// Generate presigned URLs for each photo
 	var presignedURLs []string
-	for _, photo := range order.Photos {
+	for i, photo := range order.Photos {
+
+		// Validate photo
+		if photo.Filename == "" {
+			log.Printf("Warning: Empty filename for photo %d", i)
+			continue
+		}
+
 		photoKey := fmt.Sprintf("%s/%s", folderKey, photo.Filename)
 
 		presignedPut, err := presignedClient.PresignPutObject(context.TODO(),
@@ -84,8 +93,20 @@ func GeneratePresignedURL(order *models.PhotoOrder) (*PresignedURLResponse, erro
 		if err != nil {
 			return nil, fmt.Errorf("failed to generate presigned URL: %v", err)
 		}
+
 		presignedURLs = append(presignedURLs, presignedPut.URL)
+		log.Printf("Successfully generated presigned URL %d/%d", i+1, len(order.Photos))
 	}
+
+	if len(presignedURLs) == 0 {
+		return nil, fmt.Errorf("failed to generate any presigned URLs")
+	}
+
+	// Log final results -> If you want!
+	// log.Printf("Successfully generated %d presigned URLs", len(presignedURLs))
+	// for i, url := range presignedURLs {
+	// 	log.Printf("URL %d: %s", i+1, url)
+	// }
 
 	// Send SQS print job
 	err = cfg.SendPrintRequest(order.Email, orderID, order.Location)
@@ -101,10 +122,7 @@ func GeneratePresignedURL(order *models.PhotoOrder) (*PresignedURLResponse, erro
 
 	log.Printf("Values from presignedURL: %s : %s", order.FullName, order.Location)
 
-	// Join the URLs into a single string
-	// urlString := strings.Join(presignedURLs, ",")
 	return &PresignedURLResponse{
-		// URL:     folderKey,
 		URLs:    presignedURLs,
 		OrderID: orderID,
 	}, nil
