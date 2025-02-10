@@ -183,8 +183,10 @@ uploaded → processing → printed
 - [`ProcessPrintJob()`](./src/lambda/lambda.go): Acts as a dummy printer and updates DynamoDB and sends SNS notification.
 - [`HandleOrderSubmission()`](./src/routes/order.go): This is the main entry point for the order submission process. 
 - [`GeneratePresignedURL()`](./src/url/presigned_url.go): Generates a pre-signed URL for the given order details.
-- [`UploadToS3()`](./src/config/s3.go): Uploads resized photos using the pre-signed URL to an S3 bucket. 
-- [`SendPrintRequest()`](./src/config/sqs.go): Sends a print job request from the backend to SQS.
+- [`ProcessFile()`](./src/services/processUploadToS3.go): Validates and process files to S3 bucket. 
+- [`ProcessMultipleFiles()`](./src/services/processMultipleFiles.go): Processes multiple uploaded files concurrently.
+- [`ProcessImageWithSizeTarget()`](./src/services/resizeImage.go): Takes an original image and processes it to meet the target size. 
+- [`ValidateAndProcessImage()`](./src/services/validateFormAndType.go): Processes and validates file form and type. 
 
 ## 5. 📌 Testing & Debugging
 SnapFlow's testing includes:
