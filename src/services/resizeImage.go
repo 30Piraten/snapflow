@@ -139,7 +139,7 @@ func (p *ImageProcessor) SaveImage(img image.Image, path string, opts models.Pro
 	}
 }
 
-// ConcucurrentProcessImages processes multiple images in parallel
+// ConcurrentProcessImages processes multiple images in parallel
 func (p *ImageProcessor) ConcurrentProcessImages(images []image.Image, opts models.ProcessingOptions) []image.Image {
 
 	var wg sync.WaitGroup
