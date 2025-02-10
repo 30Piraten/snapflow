@@ -271,7 +271,7 @@ upload: screenshot/test-image.png to s3://snaps3flowbucket02025/uploads/test-ima
 
 ### ✅ **Test: Full System Flow (Upload Image → Order Processing → Print Completion)**
 
-Watch full video demo here: [Snapflow Demo](https://youtu.be/hdQmYGdg_WQ)
+Watch full video demo here: [Snapflow Demo](https://youtu.be/3HeIIqWb8tU)
 
 - **Expected Output:** Full cycle works—image stored, SQS message queued, Lambda processed, order updated in DynamoDB.
 - **Actual Output:** Everything worked correctly.
