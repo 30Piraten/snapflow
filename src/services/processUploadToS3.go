@@ -58,7 +58,7 @@ func ProcessFile(c *fiber.Ctx, file *multipart.FileHeader, opts models.Processin
 	}
 
 	// order is passed as a pointer, but parsedOrder assigns
-	// a new parsed object instead of modifying rhe existing reference
+	// a new parsed object instead of modifying the existing reference
 	// this might not update the original object outside the function
 	// hence the pointer reference here!
 	*order = *parsedOrder
