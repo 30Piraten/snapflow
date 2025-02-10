@@ -49,8 +49,8 @@ func ProcessUploadedFiles(c *fiber.Ctx) error {
 		TargetSizeBytes: models.TargetFileSize,
 		Format:          "jpeg",
 		MaxDimensions: models.Dimensions{
-			Width:  5000,
-			Height: 5000,
+			Width:  6000,
+			Height: 6000,
 		},
 	}
 

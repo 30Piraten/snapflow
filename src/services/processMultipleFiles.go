@@ -1,8 +1,10 @@
 package services
 
 import (
+	"bytes"
 	"fmt"
-	"io"
+	"image"
+	"image/jpeg"
 	"mime/multipart"
 	"sync"
 
@@ -30,25 +32,40 @@ func ProcessMultipleFiles(c *fiber.Ctx, files []*multipart.FileHeader, opts mode
 	for _, file := range files {
 		source, err := file.Open()
 		if err != nil {
-			errors = append(errors, fmt.Errorf("failed to open file %s: %v", file.Filename, err))
+			errorsChan <- fmt.Errorf("failed to open file %s: %v", file.Filename, err)
+			continue
+		}
+		defer source.Close() // Close the file after reading
+
+		// fileData, err := io.ReadAll(source)
+		fileData, _, err := image.Decode(source)
+		if err != nil {
+			errorsChan <- fmt.Errorf("file %s failed decoding: %v", file.Filename, err)
 			continue
 		}
 
-		fileData, err := io.ReadAll(source)
-		source.Close() // Close the file after reading
-		if err != nil {
-			errors = append(errors, fmt.Errorf("failed to read the file %s: %v", file.Filename, err))
+		// Convert back to []byte
+		var buf bytes.Buffer
+		if err := jpeg.Encode(&buf, fileData, nil); err != nil {
+			errorsChan <- fmt.Errorf("file %s failed encoding; %v", file.Filename, err)
 			continue
 		}
+
 		processor := NewImageProcessor(utils.Logger)
-		if _, err := processor.ValidateAndProcessImage(fileData, opts); err != nil {
-			errors = append(errors, fmt.Errorf("file %s failed validation: %v", file.Filename, err))
+		if _, err := processor.ValidateAndProcessImage(buf.Bytes(), opts); err != nil {
+			errorsChan <- fmt.Errorf("file %s failed validation: %v", file.Filename, err)
 		}
 	}
 
-	// Short-circuit if the validation fials
-	if len(errors) > 0 {
-		return nil, errors
+	// // Short-circuit if the validation fails
+	close(errorsChan)
+
+	var validationErrors []error
+	for err := range errorsChan {
+		validationErrors = append(validationErrors, err)
+	}
+	if len(validationErrors) > 0 {
+		return nil, validationErrors
 	}
 
 	// Concurrent processing of validated files
@@ -77,14 +94,18 @@ func ProcessMultipleFiles(c *fiber.Ctx, files []*multipart.FileHeader, opts mode
 		}(file)
 	}
 
-	wg.Wait()
-	close(resultsChan)
-	close(errorsChan)
+	// Close channels only after all goroutines finish
+	go func() {
+		wg.Wait()
+		close(resultsChan)
+		// close(errorsChan)
+	}()
 
 	// Collect results and errors
 	for result := range resultsChan {
 		results = append(results, result)
 	}
+	// var processErrors []error
 	for err := range errorsChan {
 		errors = append(errors, err)
 	}

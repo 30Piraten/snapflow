@@ -48,9 +48,9 @@ const (
 
 	MaxConcurrentProcessing int   = 3               // Max concurrent uploads
 	MaxFileCount            int   = 10              // Maximum 10 files per request
-	TargetFileSize          int64 = 1 * 1024 * 1024 // 1MB total for all sizes
-	MaxFileSize             int64 = 50 * 100 * 1024 // 50MB per file
-	MaxTotalUploadSize      int   = 5 * 1024 * 1024 // 5MB total for all files
+	TargetFileSize          int64 = 2 * 1024 * 1024 // 2MB total for all sizes
+	MaxFileSize             int64 = 50 * 100 * 1024 // 50MB per file upload
+	// MaxTotalUploadSize      int   = 5 * 1024 * 1024 // 5MB total for all files
 )
 
 // ProcessingOptions defines configuration for image processing
@@ -124,4 +124,5 @@ const (
 	ErrCodeInvalidFormat    = "INVALID_FORMAT"
 	ErrCodeStorageFailed    = "STORAGE_FAILED"
 	ErrCodeFailedFileUpload = "NO_FILES_UPLOADED"
+	ErrCodeInvalidConfig    = "INVALID_ENV_CONFIG"
 )
