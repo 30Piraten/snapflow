@@ -23,7 +23,7 @@ My department specializes in Sprint Print, a budget-friendly, express editing an
     Photos designated for Sprint Print are marked accordingly before being sent to the Printing Department.
     
 3.  **Printing:** Once the Editing Department sends the edited photos for printing, the Sprint Print workflow is initiated (only for marked photos). The key difference with Sprint Print is that no notifications are sent to customers. Instead, customers wait to collect their photos, often processed within minutes.
-Sprint Print is intended for small orders (typically fewer than five photos), allowing for a low-cost, high-speed workflow with minimal overhead.
+Sprint Print is intended for small orders (typically fewer than ten photos), allowing for a low-cost, high-speed workflow with minimal overhead.
    
 4.  **Delivery | collection:** The Delivery Department manages the collection and delivery of printed photos, including framed orders. For Sprint Print, customers collect their photos directly from this department immediately after printing is completed.
 
