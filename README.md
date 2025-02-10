@@ -1,7 +1,7 @@
 # SnapFlow - Sprint Print Documentation
 
 ## 1. Overview
-**Project Name:** SnapFlow - Sprint Print (Sprint Print is a budget-friendly, express editing and printing service.)
+**Project Name:** SnapFlow - Sprint Print
 
 **Description:** A cloud-based photo printing workflow that allows users to upload, process, and print photos, with automated tracking and customer notifications. 
 
@@ -178,7 +178,6 @@ uploaded → processing → printed
 | Method | Endpoint | Description |
 |--------|---------|-------------|
 | POST | `/submit-order` | Uploads photo and customer info |
-| GET | `/status/:photo_id` | Retrieves print status |
 
 ### 4.2 Key Functions
 - [`ProcessPrintJob()`](./src/lambda/lambda.go): Acts as a dummy printer and updates DynamoDB and sends SNS notification.
@@ -201,13 +200,29 @@ And for tests results checkout: **[tests](./docs/test_results.md)**
 ## 5.1. 📌 Workflow Video
 Snapflow's video walkthrough: [Snapflow Demo](https://youtu.be/hdQmYGdg_WQ)
 
-## 6. Future Enhancements
-- Add customer dashboard for tracking.
-- Retry logic for SQS failures
-- DynamoDB update rollback
+Here's a more polished and professional version of your **Future Enhancements** section:  
 
-## 7. Conclusion
-- Recap of features and workflow.
-- How to contribute to the project.
-:: This is recap of my 
+---
 
+## **6. Future Enhancements** *(Planned for Next Iteration)*  
+
+- **Customer Dashboard for Order Tracking** – Implement a frontend dashboard where customers can track their photo processing status in real time.  
+- **SQS Retry Logic for Failures** – Introduce an automatic retry mechanism to handle message failures and improve system resilience.  
+- **DynamoDB Update Rollback** – Implement a rollback mechanism to prevent cases where an image is printed but not correctly marked in the database.  
+- **DynamoDB Streams Instead of SQS for Order Processing (Maybe)** – Replace SQS with DynamoDB Streams to trigger Lambda functions **only on new orders** (not on every update), reducing costs by leveraging DynamoDB’s built-in event system.  
+- **ECS Fargate for Image Resizing** – Offload intensive image resizing from the Go/Fiber backend to **ECS Fargate**. The backend will enqueue jobs to **SQS**, and Fargate workers will handle them asynchronously, improving scalability. With this, the backend only has to do two things: generate presignedURL and uploadToS3.
+- **Optimizing SNS & SES for Notifications** – Since Sprint Print customers wait on-site for their photos, an initial confirmation email is not needed. Instead, SES will send a single confirmation email **only after printing is complete**, streamlining the workflow.  
+
+---
+
+## **7. Conclusion**  
+SnapFlow is a cloud-native Sprint Print system designed to streamline the photo printing process. It allows customers to upload photos, which are then processed and prepared for printing using a scalable and event-driven architecture.  
+
+The system leverages **AWS services** for efficiency and automation:  
+- **S3** for secure photo storage  
+- **DynamoDB** for managing metadata  
+- **SQS** to handle job queues  
+- **Lambda** to process and simulate printing  
+- **SNS & SES** for automated notifications  
+
+SnapFlow was built to replicate the end-to-end workflow of my previous role, covering everything from **photo submission, processing, and optimization** to **final printing and customer notifications**. This project demonstrates expertise in **cloud infrastructure, automation, and scalable system design** while optimizing for **cost, performance, and reliability**. 
