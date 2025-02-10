@@ -114,11 +114,12 @@ func GeneratePresignedURL(order *models.PhotoOrder) (*PresignedURLResponse, erro
 		return nil, fmt.Errorf("failed to send SQS print job: %v", err)
 	}
 
-	// Send notification via SNS after print job completes
-	err = cfg.SendSNSNotification(orderID, order.Email)
-	if err != nil {
-		return nil, fmt.Errorf("failed to send SNS notification to (email: %s): %v", order.Email, err)
-	}
+	// Removed SNS Notification for initial confirmation -> Not necessary! Might review!
+	// // Send notification via SNS after print job completes
+	// err = cfg.SendSNSNotification(orderID, order.Email)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("failed to send SNS notification to (email: %s): %v", order.Email, err)
+	// }
 
 	log.Printf("Values from presignedURL: %s : %s", order.FullName, order.Location)
 
