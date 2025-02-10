@@ -83,26 +83,7 @@ aws dynamodb scan --table-name YOUR_TABLE_NAME
 
 ### **3.3 Integration Tests (Ensure AWS Services Work Together)**  
 #### **✅ Test: Full System Flow (Upload Image → Order Processes → Print Completes)**  
-1. Upload a test image via API.  
-   ```sh
-   curl -X POST "http://YOUR_API_URL/submit-order" -F "photo=@test-image.jpg" -F "name=John Doe"
-   ```
-2. Check if the image appears in S3.  
-   ```sh
-   aws s3 ls s3://YOUR_BUCKET_NAME/
-   ```
-3. Check if an SQS message is queued.  
-   ```sh
-   aws sqs receive-message --queue-url YOUR_QUEUE_URL
-   ```
-4. Check if Lambda processed the order.  
-   ```sh
-   aws logs tail /aws/lambda/YOUR_LAMBDA_FUNCTION
-   ```
-5. Verify DynamoDB has the correct order status.  
-   ```sh
-   aws dynamodb scan --table-name YOUR_TABLE_NAME
-   ```
+1. Upload video demo
 
 ✅ **Pass if:**  
 - Image appears in S3.  
