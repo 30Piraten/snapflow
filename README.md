@@ -71,7 +71,7 @@ Editors in the Sprint Print Department focus solely on editing and sending photo
 - **Photo Storage in S3**  
   After validation and resizing, the photos are uploaded to an S3 bucket using pre-signed URLs. Each photo is stored in a structured format:  
   ```
-  s3://snapflow-bucket/uploads/{customer_name}/{uniqueFilename}.jpg
+  s3://snapflow-bucket/uploads/{customer_name}/{uploadDate}/{uniqueFilename}.jpg
   ```
   This ensures **each user’s photos are organized** in separate directories.  
 
