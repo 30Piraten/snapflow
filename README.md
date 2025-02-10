@@ -9,8 +9,8 @@
 
 **Key Technologies:** Go (Fiber), AWS (S3, DynamoDB, SQS, Lambda, SNS, SES), and Terraform.  
 
-## 1.1. About Company X:
-Company X operates through four major divisions:
+## 1.1. About Lexan Digital:
+Lexan Digital operates through four major divisions:
 
 1.  **Admin - Order and Payment:** The Admin Office is responsible for handling order placement and payment processing. When a customer or photographer arrives, they place an order by providing their details and selecting the desired photo format, which includes choosing the paper type and size—both of which are critical aspects of the order. Once the order is confirmed, a receipt is issued. This receipt and the photos (scanned or uploaded to the computer's hard drive) are then forwarded to the Editing Department. In summary, no editing or further processing occurs until payment and order details have been confirmed.
 
