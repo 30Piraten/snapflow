@@ -121,7 +121,7 @@ variable "sns_email_protocol" {
 # SES CONFIG DEFINITION
 variable "ses_email" {
   type = string 
-  default = "kioyarautenberg@gmail.com"
+  default = "snap3flow@snapflow.com"
 }
 
 variable "ses_policy_name" {
