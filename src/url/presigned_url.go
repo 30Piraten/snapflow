@@ -114,8 +114,9 @@ func GeneratePresignedURL(order *models.PhotoOrder) (*PresignedURLResponse, erro
 		return nil, fmt.Errorf("failed to send SQS print job: %v", err)
 	}
 
-	// Removed SNS Notification for initial confirmation -> Not necessary! Might review!
-	// // Send notification via SNS after print job completes
+	// Removed SNS Notification for initial confirmation. Since
+	// we only need to send it once, not twice.
+	// // Send notification via SNS after the print job completes
 	// err = cfg.SendSNSNotification(orderID, order.Email)
 	// if err != nil {
 	// 	return nil, fmt.Errorf("failed to send SNS notification to (email: %s): %v", order.Email, err)
