@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/ses"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 )
 
@@ -27,6 +28,7 @@ var (
 	dynamoClient *dynamodb.Client
 	snsClient    *sns.Client
 	s3Client     *s3.Client
+	sesClient    *ses.Client
 	snsTopicArn  string
 )
 
@@ -47,6 +49,7 @@ func InitAWS() {
 	// Initialize clients
 	dynamoClient = dynamodb.NewFromConfig(config)
 	snsClient = sns.NewFromConfig(config)
+	sesClient = ses.NewFromConfig(config)
 
 	// Get SNS topic ARN from environment variable
 	snsTopicArn = os.Getenv("SNS_TOPIC_ARN")
